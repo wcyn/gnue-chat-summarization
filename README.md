@@ -1,5 +1,6 @@
 # GNUeIRC
-Collectors for the GNUe "gold standard" irc summaries and original irc logs
+Collectors for the GNUe "gold standard" irc summaries and original irc logs. Cloned from https://github.com/FLOSSmole/GNUeIRC
+
 
 ##Original Logs
 

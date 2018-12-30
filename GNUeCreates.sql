@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS `GNUeSummaryItems` (
   `issueid` int(11) DEFAULT NULL,
   `counter` int(11) DEFAULT NULL,
   `title` varchar(100) DEFAULT NULL,
-  `subject` varchar(100) DEFAULT NULL,
-  `archive` varchar(255) DEFAULT NULL,
+  `subject` varchar(256) DEFAULT NULL,
+  `archive` varchar(256) DEFAULT NULL,
   `startdate` varchar(45) DEFAULT NULL,
   `enddate` varchar(45) DEFAULT NULL,
   `datasource_id` int(11) NOT NULL,
@@ -51,7 +51,9 @@ CREATE TABLE IF NOT EXISTS `GNUeSummaryPara` (
   `paraid` int(11) NOT NULL AUTO_INCREMENT,
   `itemid` int(11) DEFAULT NULL,
   `paracount` int(11) DEFAULT NULL,
-  `para` varchar(500) DEFAULT NULL,
+  `para` varchar(8192) DEFAULT NULL,
+  `quote_date` varchar(45) DEFAULT NULL,
+  `issue_id` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`paraid`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4;
 
@@ -64,8 +66,10 @@ CREATE TABLE IF NOT EXISTS `GNUeSummaryPara` (
 CREATE TABLE IF NOT EXISTS `GNUeSummaryParaQuotes` (
   `paraquoteid` int(11) NOT NULL AUTO_INCREMENT,
   `paraid` int(11) DEFAULT NULL,
-  `who` varchar(100) DEFAULT NULL,
-  `quote` varchar(200) DEFAULT NULL,
+  `who` varchar(128) DEFAULT NULL,
+  `quote` varchar(8192) DEFAULT NULL,
+  `quote_date` varchar(45) DEFAULT NULL,
+  `quote_num` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`paraquoteid`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4;
 
@@ -81,3 +85,17 @@ CREATE TABLE IF NOT EXISTS `GNUeSummaryTopics` (
   `topic` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`topicid`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
+
+
+CREATE TABLE IF NOT EXISTS `GNUeIRCLogs` (
+  `log_id` int(11) NOT NULL AUTO_INCREMENT,
+  `line_count` varchar(45) DEFAULT NULL,
+  `line_type` varchar(45) DEFAULT NULL,
+  `send_user` varchar(128) DEFAULT NULL,
+  `line_message` varchar(8192) DEFAULT NULL,
+  `datasource_id` varchar(45) DEFAULT NULL,
+  `date_of_log` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`log_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
+
+-- GNUeIRCLogs(date_of_log, line_count, type, send_user, line_message, datasource_id)
