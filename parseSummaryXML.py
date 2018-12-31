@@ -4,30 +4,20 @@ import MySQLdb
 import re
 
 from bs4 import BeautifulSoup
+from database import DatabaseConnection
 from os import listdir
 from os.path import isfile, join
 
+
 datasource_id = 48038
 path = 'XMLsummaries'
+connection = DatabaseConnection()
+db, cursor = connection.db, connection.cursor
 
-# Open database connection
-db = MySQLdb.connect(
-    host="127.0.0.1",
-    user="root",
-    passwd="bubo1234",
-    db="gnue_irc",
-    use_unicode=True,
-    charset="utf8"
-    )
-cursor = db.cursor()
-cursor.execute('SET NAMES utf8mb4')
-cursor.execute('SET CHARACTER SET utf8mb4')
-cursor.execute('SET character_set_connection=utf8mb4')
 
 files = [f for f in listdir(path) if isfile(join(path, f))]
 for filename in files:
-    print('reading %s' % (filename))
-    # xml = open(join(path,filename)).read()
+    print('reading %s' % filename)
     xml = io.open(join(path, filename), 'r', encoding='utf8')
 
     soup = BeautifulSoup(xml, features="html.parser")
@@ -35,9 +25,7 @@ for filename in files:
     counter = 0
     autoincval = 0
     date_and_number = re.sub("[A-Za-z.]", "", filename)
-    quote_date, quote_num = date_and_number.split('_')
-    # Format quote date
-    quote_date = quote_date[:4] + '-' + quote_date[4:6] + '-' + quote_date[6:]
+    quote_num = date_and_number.split('_')[-1]
 
     for sec in soup.find_all('section'):
         counter += 1

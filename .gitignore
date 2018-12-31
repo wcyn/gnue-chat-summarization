@@ -3,3 +3,4 @@ XMLSummaries/
 chatLogs/
 chatLogs2/
 .DS_Store
+*.pyc
