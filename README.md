@@ -41,3 +41,17 @@ Step 4: Parse the summaries using parseSummaryXML.py
 ```
 INSERT INTO `ossmole_merged`.`forges` (`forge_id`, `forge_abbr`, `forge_long_name`, `forge_home_page`, `is_forge`, `is_directory`, `is_other`, `established`, `organization`) VALUES ('67', 'GNUe', 'GNUe Traffic IRC summaries', 'https://web.archive.org/web/20080509160725/http://www.gnuenterprise.org/irc-logs/', '0', '0', '1', '2001', 'GNUenterprise');
 ```
+
+### How to run files
+
+#### `UI/mark_log_ids.py`
+```
+python2 -m UI.mark_log_ids
+
+```
+
+#### `./mark_summary.py`
+```
+python2 mark_summary.py
+
+```

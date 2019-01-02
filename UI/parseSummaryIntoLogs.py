@@ -8,7 +8,7 @@ from os.path import isfile, join
 datasource_id = 48038
 path = 'XMLsummaries'
 
-files = [f for f in listdir(path) if isfile(join(path, f))][:1]
+files = [f for f in listdir(path) if isfile(join(path, f))]
 for filename in files:
     print('reading %s' % filename)
     xml = io.open(join(path, filename), 'r', encoding='utf8')

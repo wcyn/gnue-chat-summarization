@@ -1,20 +1,15 @@
 import re
 import codecs
 import MySQLdb
+
+from database.database import DatabaseConnection
 from os import listdir
 from os.path import isfile, join
 
 datasource_id = 48038
-
 # Open database connection
-db = MySQLdb.connect(
-    host="localhost", user="root", passwd="bubo1234",
-    db="gnue_irc", use_unicode=True, charset="utf8"
-    )
-cursor = db.cursor()
-cursor.execute('SET NAMES utf8mb4')
-cursor.execute('SET CHARACTER SET utf8mb4')
-cursor.execute('SET character_set_connection=utf8mb4')
+connection = DatabaseConnection()
+db, cursor = connection.db, connection.cursor
 
 path = 'chatLogs'
 files = [f for f in listdir(path) if not f.startswith('.') and isfile(

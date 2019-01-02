@@ -1,9 +1,10 @@
 import MySQLdb
 
-from database import DatabaseConnection
+from database.database import DatabaseConnection
 
 connection = DatabaseConnection()
 db, cursor = connection.db, connection.cursor
+
 
 def get_quotes_for_date(quote_date):
     """
