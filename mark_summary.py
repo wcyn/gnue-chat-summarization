@@ -1,6 +1,6 @@
 import MySQLdb
 
-from database.database import DatabaseConnection
+from app.database.database import DatabaseConnection
 
 connection = DatabaseConnection()
 db, cursor = connection.db, connection.cursor

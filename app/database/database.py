@@ -12,7 +12,7 @@ class DatabaseConnection(object):
             db="gnue_irc",
             use_unicode=True,
             charset="utf8",
-            cursorclass=cursors.SSCursor
+            cursorclass=cursors.DictCursor
         )
         self.cursor = self.db.cursor()
         self.cursor.execute('SET NAMES utf8mb4')

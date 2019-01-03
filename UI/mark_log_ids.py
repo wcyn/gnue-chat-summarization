@@ -1,9 +1,8 @@
 import io
-import dateparser
 import MySQLdb
 
 from bs4 import BeautifulSoup
-from database import database
+from app.database import database
 from os import listdir
 from os.path import isfile, join
 
@@ -43,7 +42,6 @@ def add_log_ids_to_line_messages():
         html = io.open(path_to_file, "r", encoding="utf8")
         soup = BeautifulSoup(html, features="html.parser")
 
-        # issueid = soup.issue.get('num')
 
         for row in soup.find_all('tr'):
             line_message = row.find("td", **{"class": "text"})

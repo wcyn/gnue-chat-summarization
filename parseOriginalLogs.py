@@ -2,7 +2,7 @@ import re
 import codecs
 import MySQLdb
 
-from database.database import DatabaseConnection
+from app.database.database import DatabaseConnection
 from os import listdir
 from os.path import isfile, join
 
