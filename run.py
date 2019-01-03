@@ -1,13 +1,13 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
-from .app.services.logs import get_logs_by_date, get_log_by_id
+from .app.services.logs import get_logs_by_date, get_log_by_id, update_log_by_id
 
 app = Flask(__name__)
 
 
 @app.route("/")
 def hello_world():
-    return "Welcome to the Conversational Data Preprocessor homepage"
+    return "Welcome to the Conversational Data Preprocessor Homepage"
 
 
 @app.route("/logs/date/<date>")
@@ -17,7 +17,15 @@ def get_all_logs_for_given_date(date):
     return jsonify(logs)
 
 
-@app.route("/logs/<log_id>/")
+@app.route("/logs/<log_id>", methods=["GET", "PUT"])
 def get_log(log_id):
-    log_info = get_log_by_id(log_id)
-    return jsonify(log_info)
+    if request.method == "GET":
+        log_info = get_log_by_id(log_id)
+        return jsonify(log_info)
+    elif request.method == "PUT":
+        is_summary = request.form.get('is_summary')
+        if not is_summary:
+            return jsonify({"error": "is_summary field is required"})
+        update_log_by_id(log_id, is_summary)
+        return jsonify({"success": "successfully updated is_summary field"})
+

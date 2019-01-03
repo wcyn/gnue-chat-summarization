@@ -75,7 +75,7 @@ def mark_quoted_logs_as_summary_per_date(date_of_log):
                 u"WHERE log_id IN ({}) "
                 u"AND date_of_log=%s".format(format_ids), tuple(log_ids)
             )
-
+            
         except MySQLdb.Error as error:
             print(error)
     else:
