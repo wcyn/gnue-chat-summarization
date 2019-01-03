@@ -1,13 +1,13 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 
 from .app.services.logs import get_logs_by_date, get_log_by_id, update_log_by_id
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='app/templates')
 
 
 @app.route("/")
 def hello_world():
-    return "Welcome to the Conversational Data Preprocessor Homepage"
+    return render_template('index.html', my_string="Some string!", my_list=[0,1,2,3,4,5])
 
 
 @app.route("/logs/date/<date>")
