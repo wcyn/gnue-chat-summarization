@@ -23,7 +23,7 @@ table.irclog {
     width: 60%;
     float: left;
 }
-th.nick {
+td.nick {
     padding: 1px 2px;
     text-align: right;
 }
@@ -131,7 +131,16 @@ a.time:after { content: "]"; }
 .part, .join, .servermsg, .nickchange, .other { font-size: smaller; }
 td.part + td, td.join + td, td.servermsg + td, td.nickchange + td,
 td.other + td { font-size: smaller; text-align: right; }
+span.summary-checkbox, span.summary-header {
+    float: right;
+}
+span.summary-header {
+    width: 85px;
+}
 
+input.summary-submit {
+    float: right;
+}
 
 div.generatedby {
     margin-top: 1em;

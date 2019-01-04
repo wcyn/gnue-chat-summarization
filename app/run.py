@@ -1,11 +1,12 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, url_for, redirect
 
 from .services.logs import (
     get_logs_by_date,
     get_log_by_id,
-    update_log_by_id,
+    get_summary_by_date,
     get_username_colors,
-    get_summary_by_date
+    update_log_by_id,
+    update_log_message_summaries
 )
 
 app = Flask(__name__, template_folder='templates')
@@ -20,7 +21,7 @@ def home_page():
         endpoints=[("/logs/date/<date>", ["GET"]), ("/logs/<log_id>", ["GET", "PUT"])])
 
 
-@app.route("/p/logs/<date>", methods="GET", "PUT")
+@app.route("/p/logs/<date>", methods=["GET", "POST"])
 def logs_page(date):
 
     logs = get_logs_by_date(date)
@@ -35,17 +36,12 @@ def logs_page(date):
             username_colors=username_colors,
             summary=summary
         )
-    elif request.method == "PUT":
+    elif request.method == "POST":
         result = request.form
-        print result
-
-        return render_template(
-            'logs.html',
-            date=date,
-            logs=logs,
-            username_colors=username_colors,
-            summary=summary
-        )
+        summary_messages = result.getlist('chat_log')
+        update_log_message_summaries(date, summary_messages)
+        print summary_messages
+        return redirect(url_for('logs_page', **{'date': date}))
 
 
 @app.route("/logs/date/<date>")

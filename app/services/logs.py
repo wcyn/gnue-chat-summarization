@@ -84,6 +84,58 @@ def generate_random_color():
     return random.choice(colors)
 
 
+def update_log_message_summaries(date_of_log, log_ids):
+    format_ids = ','.join(['%s'] * len(log_ids))
+    log_ids.append(date_of_log)
+    # Reset all summaries to 0
+    try:
+        cursor.execute(
+            u"UPDATE GNUeIRCLogs SET is_summary=0"
+        )
+        print "RESET"
+        db.commit()
+    except MySQLdb.Error as error:
+        print("ERROR: {}".format(error))
+        db.rollback()
+    except Exception as error:
+        print error
+
+    if len(log_ids) > 1:
+        try:
+            cursor.execute(
+                u"UPDATE GNUeIRCLogs SET is_summary=1 "
+                u"WHERE log_id IN ({}) "
+                u"AND date_of_log=%s".format(format_ids), tuple(log_ids)
+            )
+            print "UPDATED"
+            db.commit()
+            return cursor.fetchone()
+        except MySQLdb.Error as error:
+            print("ERROR: {}".format(error))
+            db.rollback()
+        except Exception as error:
+            print error
+    else:
+        print "No log messages set to summarized for: ", date_of_log
+
+    # log_ids = get_log_ids_of_quoted_logs(date_of_log)
+    # format_ids = ','.join(['%s'] * len(log_ids))
+    # log_ids.append(date_of_log)
+    # print date_of_log
+    # if len(log_ids) > 1:
+    #     try:
+    #         cursor.execute(
+    #             u"UPDATE GNUeIRCLogs SET is_summary=1 "
+    #             u"WHERE log_id IN ({}) "
+    #             u"AND date_of_log=%s".format(format_ids), tuple(log_ids)
+    #         )
+    #
+    #     except MySQLdb.Error as error:
+    #         print("ERROR: {}".format(error))
+    # else:
+    #     print "No quotes found for: ", date_of_log
+
+
 def get_summary_by_date(date):
     try:
         cursor.execute(
