@@ -2,16 +2,19 @@
 
 {% block content %}
     <div class="chat-logs">
-         <table class="irclog">
+        <form action="#" method = "PUT">
+            <input type="checkbox" name="chat-log" value="log 1"> Log Log 1<br>
+            <input type="checkbox" name="chat-log" value="log 2"> Log log 2<br>
+        </form>
+        <table class="irclog">
             {% for log in logs %}
-             {% set username = log['send_user']%}
+                {% set username = log['send_user']%}
                 <tr>
                     <th class="nick" style="color: {{username_colors[username]}}">{{username}}:</th>
                     <td class="text tooltip" colspan="2" log_id="{{log_id}}">{{log['line_message']}}</td>
-
                 </tr>
             {% endfor %}
-         </table>
+        </table>
         <div class="summary">
             <h4>Summary</h4>
             {% for paragraph in summary %}

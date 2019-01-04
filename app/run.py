@@ -20,19 +20,32 @@ def home_page():
         endpoints=[("/logs/date/<date>", ["GET"]), ("/logs/<log_id>", ["GET", "PUT"])])
 
 
-@app.route("/p/logs/<date>")
+@app.route("/p/logs/<date>", methods="GET", "PUT")
 def logs_page(date):
+
     logs = get_logs_by_date(date)
     usernames = {log.get('send_user') for log in logs}
     username_colors = get_username_colors(usernames)
     summary = get_summary_by_date(date)
-    return render_template(
-        'logs.html',
-        date=date,
-        logs=logs,
-        username_colors=username_colors,
-        summary=summary
-    )
+    if request.method == "GET":
+        return render_template(
+            'logs.html',
+            date=date,
+            logs=logs,
+            username_colors=username_colors,
+            summary=summary
+        )
+    elif request.method == "PUT":
+        result = request.form
+        print result
+
+        return render_template(
+            'logs.html',
+            date=date,
+            logs=logs,
+            username_colors=username_colors,
+            summary=summary
+        )
 
 
 @app.route("/logs/date/<date>")
