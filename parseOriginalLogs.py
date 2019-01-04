@@ -48,7 +48,7 @@ for filename in files:
                 username = ''
                 line_message = ''
             except MySQLdb.Error as error:
-                print(error)
+                print("ERROR: {}".format(error))
                 db.rollback()
 
         # elif patternSystem.search(line):

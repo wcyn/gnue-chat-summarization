@@ -43,7 +43,7 @@ for filename in files:
                     summary_div.append(p)
 
                 except Exception as error:
-                    print(error)
+                    print("ERROR: {}".format(error))
 
             table.insert_after(summary_div)
             with open(path_to_file, "w") as f:

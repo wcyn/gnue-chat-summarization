@@ -32,7 +32,7 @@ def get_quotes_for_date(quote_date):
         # print(quotes_set)
 
     except MySQLdb.Error as error:
-        print(error)
+        print("ERROR: {}".format(error))
         db.rollback()
 
     return quotes_set
@@ -58,7 +58,7 @@ def get_log_ids_of_quoted_logs(date_of_log):
                 # print log_id, line_message
 
     except MySQLdb.Error as error:
-        print(error)
+        print("ERROR: {}".format(error))
         db.rollback()
     return quoted_log_ids
 
@@ -75,9 +75,9 @@ def mark_quoted_logs_as_summary_per_date(date_of_log):
                 u"WHERE log_id IN ({}) "
                 u"AND date_of_log=%s".format(format_ids), tuple(log_ids)
             )
-            
+
         except MySQLdb.Error as error:
-            print(error)
+            print("ERROR: {}".format(error))
     else:
         print "No quotes found for: ", date_of_log
 
@@ -96,7 +96,7 @@ def mark_all_quoted_logs_as_summary():
                 mark_quoted_logs_as_summary_per_date(date_of_log)
 
     except MySQLdb.Error as error:
-        print(error)
+        print("ERROR: {}".format(error))
         db.rollback()
 
 

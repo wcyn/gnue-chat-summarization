@@ -25,7 +25,7 @@ def create_logs_ids_map(date_of_log):
             log_ids_map[line_message] = log_id
 
     except MySQLdb.Error as error:
-        print(error)
+        print("ERROR: {}".format(error))
         db.rollback()
     return log_ids_map
 

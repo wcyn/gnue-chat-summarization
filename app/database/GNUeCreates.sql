@@ -60,6 +60,22 @@ CREATE TABLE IF NOT EXISTS `GNUeSummaryPara` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `GNUeSummaryParaRaw`
+--
+
+CREATE TABLE IF NOT EXISTS `GNUeSummaryParaRaw` (
+  `paraid` int(11) NOT NULL AUTO_INCREMENT,
+  `itemid` int(11) DEFAULT NULL,
+  `paracount` int(11) DEFAULT NULL,
+  `para` varchar(8192) DEFAULT NULL,
+  `quote_date` varchar(45) DEFAULT NULL,
+  `issue_id` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`paraid`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `GNUeSummaryParaQuotes`
 --
 
