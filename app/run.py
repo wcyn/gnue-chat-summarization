@@ -25,10 +25,10 @@ def home_page():
 def logs_page(date):
 
     logs = get_logs_by_date(date)
-    usernames = {log.get('send_user') for log in logs}
-    username_colors = get_username_colors(usernames)
-    summary = get_summary_by_date(date)
     if request.method == "GET":
+        usernames = {log.get('send_user') for log in logs}
+        username_colors = get_username_colors(usernames)
+        summary = get_summary_by_date(date)
         return render_template(
             'logs.html',
             date=date,
@@ -38,9 +38,9 @@ def logs_page(date):
         )
     elif request.method == "POST":
         result = request.form
-        summary_messages = result.getlist('chat_log')
-        update_log_message_summaries(date, summary_messages)
-        print summary_messages
+        summary_log_ids = set(result.getlist('chat_log'))
+        update_log_message_summaries(date, logs, summary_log_ids)
+        print summary_log_ids
         return redirect(url_for('logs_page', **{'date': date}))
 
 

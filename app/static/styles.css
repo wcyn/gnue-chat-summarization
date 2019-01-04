@@ -188,12 +188,16 @@ quote {
 /* Tooltip text */
 .tooltip .tooltip-text {
     visibility: hidden;
-    width: 75px;
+    height: 25px;
+    width: 80px;
+    line-height: 25px;
     background-color: black;
     color: #fff;
     text-align: center;
-    padding: 1px 0;
-    left: -78px;
+    font-size: 0.9em;
+    left: -90px;
+    border-radius: 2px;
+    bottom: 2px;
     position: absolute;
     z-index: 1;
 }

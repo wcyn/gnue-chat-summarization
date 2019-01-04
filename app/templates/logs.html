@@ -12,7 +12,8 @@
                     {% set username = log['send_user']%}
                     <tr>
                         <td class="nick" style="color: {{username_colors[username]}}">{{username}}:</td>
-                        <td class="text tooltip" colspan="2" log_id="{{log_id}}">{{log['line_message']}}
+                        <td class="text tooltip" colspan="2" log_id="{{log['log_id']}}">{{log['line_message']}}
+                            <span class="tooltip-text">{{log['log_id']}}</span>
                             <span class="summary-checkbox">
                                 <input type="checkbox" name="chat_log" value="{{log['log_id']}}" {% if log['is_summary'] %} checked="checked" {% endif %}>
                             </span>
