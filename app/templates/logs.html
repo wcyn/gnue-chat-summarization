@@ -2,6 +2,10 @@
 
 {% block content %}
     <div class="chat-logs">
+        <div class="navigation">
+            <a class="previous-date" href="{{ url_for('logs_page', **{'logs_date': previous_date}) }}">< Previous Date ({{previous_date}})</a>
+            <a class="next-date" href="{{ url_for('logs_page', **{'logs_date': next_date}) }}">Next Date ({{next_date}}) ></a>
+        </div>
         <form method="POST">
             <table class="irclog">
                 <tr>
@@ -23,13 +27,41 @@
             </table>
             <input class="summary-submit" type="submit" value="Submit">
         </form>
+
         <div class="summary">
-            <h4>Summary</h4>
-            {% for paragraph in summary %}
-            <div class="summary-block">
-                {{paragraph['para']}}
-            </div>
+            {% set s_sum = logs[0]['summary_sum'] if logs else None %}
+            <h4>Quotes and Summary ({{s_sum}} Quoted)</h4>
+            {% for summary_quote in summary_and_quotes %}
+                <div class="summary-block">
+                    {{summary_quote['para']}}
+                    <div class="quotes">
+                        {% set quotes = summary_quote['quotes'].split('^&##m*_^->') if summary_quote else [] %}
+                        {% set single_quotes = [] %}
+                        {% for quote in quotes %}
+                            {% if single_quotes.extend(quote.split('-')) %} {% endif %}
+                        {% endfor %}
+                        <h4>{{ single_quotes|length }} Quotes</h4>
+
+                        {% for quote in single_quotes %}
+                            <div class="quote-block">
+                                "{{quote}}"
+                            </div>
+                        {% endfor %}
+
+                        {% if not quotes %}
+                            <div class="no-quotes">
+                                No quotes exists for logs on this date
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
             {% endfor %}
         </div>
+
+        {% if not summary_and_quotes %}
+            <div class="no-summary">
+                No Summary exists for logs on this date
+            </div>
+        {% endif %}
     </div>
 {% endblock %}

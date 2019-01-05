@@ -1,9 +1,11 @@
-from flask import Flask, jsonify, request, render_template, url_for, redirect
+import time
 
+from datetime import date, timedelta
+from flask import Flask, jsonify, request, render_template, url_for, redirect
 from .services.logs import (
     get_logs_by_date,
     get_log_by_id,
-    get_summary_by_date,
+    get_summary_and_quotes_by_date,
     get_username_colors,
     update_log_by_id,
     update_log_message_summaries
@@ -21,32 +23,46 @@ def home_page():
         endpoints=[("/logs/date/<date>", ["GET"]), ("/logs/<log_id>", ["GET", "PUT"])])
 
 
-@app.route("/p/logs/<date>", methods=["GET", "POST"])
-def logs_page(date):
+@app.route("/p/logs/<logs_date>", methods=["GET", "POST"])
+def logs_page(logs_date):
 
-    logs = get_logs_by_date(date)
+    logs = get_logs_by_date(logs_date)
     if request.method == "GET":
         usernames = {log.get('send_user') for log in logs}
         username_colors = get_username_colors(usernames)
-        summary = get_summary_by_date(date)
+        summary_and_quotes = get_summary_and_quotes_by_date(logs_date)
+        # summary, quotes = [], []
+        # for s, q in summary_and_quotes:
+        #     summary.append(s)
+
+        t = time.strptime('20110531', '%Y%m%d')
+        newdate = date(t.tm_year, t.tm_mon, t.tm_mday) + timedelta(1)
+        print newdate.strftime('%Y%m%d')
+        current_date = time.strptime(logs_date, '%Y-%m-%d')
+        previous_date = (date(
+            current_date.tm_year, current_date.tm_mon, current_date.tm_mday) - timedelta(1)).strftime('%Y-%m-%d')
+        next_date = (date(
+            current_date.tm_year, current_date.tm_mon, current_date.tm_mday) + timedelta(1)).strftime('%Y-%m-%d')
         return render_template(
             'logs.html',
-            date=date,
+            logs_date=logs_date,
             logs=logs,
             username_colors=username_colors,
-            summary=summary
+            summary_and_quotes=summary_and_quotes,
+            previous_date=previous_date,
+            next_date=next_date
         )
     elif request.method == "POST":
         result = request.form
         summary_log_ids = set(result.getlist('chat_log'))
-        update_log_message_summaries(date, logs, summary_log_ids)
+        update_log_message_summaries(logs_date, logs, summary_log_ids)
         print summary_log_ids
-        return redirect(url_for('logs_page', **{'date': date}))
+        return redirect(url_for('logs_page', **{'logs_date': logs_date}))
 
 
 @app.route("/logs/date/<date>")
-def get_all_logs_for_given_date(date):
-    logs = get_logs_by_date(date)
+def get_all_logs_for_given_date(logs_date):
+    logs = get_logs_by_date(logs_date)
     logs = {"logs": logs}
     return jsonify(logs)
 

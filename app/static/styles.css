@@ -102,6 +102,8 @@ a:active, a:hover {
 
 .navigation {
     margin: 1em 0em;
+    text-align: right;
+    font-size: 0.9em;
 }
 .navigation a, .navigation span {
     margin-right: 1em;
@@ -139,7 +141,11 @@ span.summary-header {
 }
 
 input.summary-submit {
-    float: right;
+    margin-left: 35%;
+    position: fixed;
+    cursor: pointer;
+    width: 52px;
+    z-index: 10;
 }
 
 div.generatedby {
@@ -164,12 +170,18 @@ div.generatedby a:hover {
     border-bottom: 1px dotted #ff8888;
 }
 
-quote {
+.quote-block {
     color: lightcoral;
+    margin: 10px;
 }
 
 .summary {
-   margin-left: 61%;
+    margin-left: 61%;
+    position: fixed;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    top: 92px;
+    bottom: 0;
 }
 .summary > h4 {
    margin: 10px;
@@ -180,6 +192,11 @@ quote {
     margin: 5px;
 }
 
+.no-summary {
+    background: #eee;
+    padding: 30px;
+    text-align: center;
+}
 .tooltip {
   position: relative;
   display: inline-block;
@@ -205,4 +222,8 @@ quote {
 /* Show the tooltip text when you mouse over the tooltip container */
 .tooltip:hover .tooltip-text {
   visibility: visible;
+}
+
+a.previous-date, a.next-date {
+    text-decoration: none;
 }

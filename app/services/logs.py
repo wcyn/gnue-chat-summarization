@@ -10,8 +10,10 @@ db, cursor = connection.db, connection.cursor
 def get_logs_by_date(date_of_log):
     try:
         cursor.execute(
-            u"SELECT log_id, line_message, is_summary, send_user, username_color FROM GNUeIRCLogs "
-            u"WHERE date_of_log=%s", (date_of_log,)
+            u"SELECT log_id, line_message, is_summary, send_user, username_color, "
+            u"SUM(is_summary) OVER () AS summary_sum "
+            u"FROM GNUeIRCLogs "
+            u"WHERE date_of_log=%s ", (date_of_log,)
         )
         return cursor.fetchall()
     except MySQLdb.Error as error:
@@ -110,11 +112,14 @@ def update_log_message_summaries(date_of_log, logs, summary_log_ids):
         print "No log messages available for: ", date_of_log
 
 
-def get_summary_by_date(date):
+def get_summary_and_quotes_by_date(date):
     try:
         cursor.execute(
-            u"SELECT para FROM GNUeSummaryPara "
-            u"WHERE quote_date=%s", (date,)
+            u"SELECT para, GROUP_CONCAT(GNUeSummaryParaQuotes.quote SEPARATOR ' ^&##m*_^-> ') AS quotes "
+            u"FROM GNUeSummaryPara INNER JOIN GNUeSummaryParaQuotes "
+            u"ON GNUeSummaryPara.paraid = GNUeSummaryParaQuotes.paraid "
+            u"WHERE GNUeSummaryParaQuotes.quote_date=%s "
+            u"GROUP BY para", (date,)
         )
         return cursor.fetchall()
     except MySQLdb.Error as error:
