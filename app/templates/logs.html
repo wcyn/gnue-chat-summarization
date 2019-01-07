@@ -3,8 +3,9 @@
 {% block content %}
     <div class="chat-logs">
         <div class="navigation">
-            <a class="previous-date" href="{{ url_for('logs_page', **{'logs_date': previous_date}) }}">< Previous Date ({{previous_date}})</a>
-            <a class="next-date" href="{{ url_for('logs_page', **{'logs_date': next_date}) }}">Next Date ({{next_date}}) ></a>
+            <span class="date-header">{{ logs_date }}</span>
+            <a class="previous-date" href="{{ url_for('logs_page', **{'logs_date': previous_date}) }}">Previous ({{previous_date}}) </a>
+            <a class="next-date" href="{{ url_for('logs_page', **{'logs_date': next_date}) }}">Next({{next_date}})</a>
         </div>
         <form method="POST">
             <table class="irclog">
@@ -49,19 +50,18 @@
                         {% endfor %}
 
                         {% if not quotes %}
-                            <div class="no-quotes">
+                            <div class="quote-block">
                                 No quotes exists for logs on this date
                             </div>
                         {% endif %}
                     </div>
                 </div>
             {% endfor %}
-        </div>
-
-        {% if not summary_and_quotes %}
-            <div class="no-summary">
+            {% if not summary_and_quotes %}
+            <div class="summary-block">
                 No Summary exists for logs on this date
             </div>
         {% endif %}
+        </div>
     </div>
 {% endblock %}

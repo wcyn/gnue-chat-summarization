@@ -1,11 +1,28 @@
 .container {
     max-width: 500px;
     padding-top: 100px;
+    margin: auto;
 }
 
 div.menu {
-    padding: 15px 15px 0px 15px;
+    padding: 10px;
+    background: #e74c3c;
+    color: #eee;
 }
+
+div.menu a {
+    padding: 10px;
+    background: #e74c3c;
+    color: #eee;
+    text-decoration: none;
+}
+
+div.menu a:hover {
+    padding: 10px;
+    background: #e74c3c;
+    text-decoration: underline;
+}
+
 
 /* Alternative 1: text */
 
@@ -22,6 +39,7 @@ div.irclog p { margin: 2px 0; }
 table.irclog {
     width: 60%;
     float: left;
+    padding: 0 0 10px 15px;
 }
 td.nick {
     padding: 1px 2px;
@@ -80,6 +98,7 @@ body {
     color: black;
     background: white;
     font-family: 'Roboto', sans-serif;
+    margin: 0;
 }
 
 h1, h2, h3 {
@@ -101,9 +120,13 @@ a:active, a:hover {
 }
 
 .navigation {
-    margin: 1em 0em;
+    margin-bottom: 12px;
     text-align: right;
     font-size: 0.9em;
+    background: #f1f1f1;
+    padding: 10px;
+    height: 30px;
+    line-height: 30px;
 }
 .navigation a, .navigation span {
     margin-right: 1em;
@@ -170,6 +193,14 @@ div.generatedby a:hover {
     border-bottom: 1px dotted #ff8888;
 }
 
+.date-header {
+    font-weight: bold;
+    font-size: 1.3em;
+    float: left;
+    color: #333;
+    width: 40%;
+}
+
 .quote-block {
     color: lightcoral;
     margin: 10px;
@@ -180,20 +211,20 @@ div.generatedby a:hover {
     position: fixed;
     overflow-y: scroll;
     overflow-x: hidden;
-    top: 92px;
+    top: 93px;
     bottom: 0;
 }
 .summary > h4 {
    margin: 10px;
 }
 .summary-block {
-    background: #eee;
+    background: #f1f1f1;
     padding: 20px;
     margin: 5px;
 }
 
 .no-summary {
-    background: #eee;
+    background: #f1f1f1;
     padding: 30px;
     text-align: center;
 }

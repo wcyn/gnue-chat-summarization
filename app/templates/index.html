@@ -9,6 +9,8 @@
         <li><a href="{{endpoint}}">{{endpoint}}</a> - {% for method in methods %}{{method}}, {% endfor %} </li>
         {% endfor %}
       </ul>
-        <div>Start <a href="{{ url_for('logs_page', **{'logs_date': '2001-06-27)'}) }}">here</a></div>
+        <div>Start <a href="{{ url_for('logs_page', **{'logs_date': '2001-10-23'}) }}">here</a></div>
+        <div>Coming back? Continue here:  <a href="{{ url_for('logs_page', **{'logs_date': '2001-10-26'}) }}">here</a></div>
+
     </div>
 {% endblock %}
