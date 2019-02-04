@@ -9,8 +9,12 @@
         </div>
         <form method="POST">
             <table class="irclog">
+                <colgroup>
+                    <col style="width:10%">
+                    <col style="width:90%">
+                </colgroup>
                 <tr>
-                    <th>Username</th>
+                    <th class="username-header">Username</th>
                     <th>Message <span class="summary-header">Is summary</span></th>
                 </tr>
                 {% for log in logs %}
