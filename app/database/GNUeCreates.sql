@@ -115,3 +115,23 @@ CREATE TABLE IF NOT EXISTS `GNUeIRCLogs` (
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 ;
 
 -- GNUeIRCLogs(date_of_log, line_count, type, send_user, line_message, datasource_id)
+
+CREATE TABLE GNUeIRCLogs
+(
+  log_id                          INT AUTO_INCREMENT
+    PRIMARY KEY,
+  line_count                      VARCHAR(45)               NULL,
+  line_type                       VARCHAR(45)               NULL,
+  send_user                       VARCHAR(128)              NULL,
+  line_message                    VARCHAR(8192)             NULL,
+  datasource_id                   VARCHAR(45)               NULL,
+  date_of_log                     VARCHAR(45)               NULL,
+  is_summary                      TINYINT DEFAULT '0'       NOT NULL,
+  username_color                  VARCHAR(8) DEFAULT '#ddd' NOT NULL,
+  spelling_corrected_line_message TEXT                      NULL
+)
+  ENGINE = MyISAM;
+
+CREATE INDEX date_of_log
+  ON GNUeIRCLogs (date_of_log);
+

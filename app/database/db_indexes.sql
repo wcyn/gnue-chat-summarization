@@ -10,3 +10,5 @@ ALTER TABLE GNUeIRCLogs ADD INDEX (date_of_log);
 
 ALTER TABLE GNUeSummaryParaQuotes ADD INDEX (quote_date);
 ALTER TABLE GNUeSummaryParaQuotes ADD INDEX (paraid);
+CREATE INDEX GNUeSummaryParaQuotes_quote_date_index
+  ON gnuesummaryparaquotes (quote_date);
