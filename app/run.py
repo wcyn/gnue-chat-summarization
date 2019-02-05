@@ -38,7 +38,7 @@ def logs_page(logs_date):
 
         t = time.strptime('20110531', '%Y%m%d')
         newdate = date(t.tm_year, t.tm_mon, t.tm_mday) + timedelta(1)
-        print newdate.strftime('%Y%m%d')
+        print(newdate.strftime('%Y%m%d'))
         current_date = time.strptime(logs_date, '%Y-%m-%d')
         previous_date = (date(
             current_date.tm_year, current_date.tm_mon, current_date.tm_mday) - timedelta(1)).strftime('%Y-%m-%d')
@@ -57,7 +57,7 @@ def logs_page(logs_date):
         result = request.form
         summary_log_ids = set(result.getlist('chat_log'))
         update_log_message_summaries(logs_date, logs, summary_log_ids)
-        print summary_log_ids
+        print(summary_log_ids)
         return redirect(url_for('logs_page', **{'logs_date': logs_date}))
 
 

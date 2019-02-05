@@ -32,7 +32,7 @@ def get_log_by_id(log_id):
         print("ERROR: {}".format(error))
         db.rollback()
     except Exception as error:
-        print error
+        print(error)
 
 
 def update_log_by_id(log_id, is_summary):
@@ -41,14 +41,14 @@ def update_log_by_id(log_id, is_summary):
             u"UPDATE GNUeIRCLogs "
             u"SET is_summary=%s WHERE log_id=%s", (is_summary, log_id)
         )
-        print "UPDATED"
+        print("UPDATED")
         db.commit()
         return cursor.fetchone()
     except MySQLdb.Error as error:
         print("ERROR: {}".format(error))
         db.rollback()
     except Exception as error:
-        print error
+        print(error)
 
 
 def get_username_colors(usernames):
@@ -100,16 +100,16 @@ def update_log_message_summaries(date_of_log, logs, summary_log_ids):
                 u"is_summary=VALUES(is_summary)"
                 .format(logs_summary_format),
             )
-            print "UPDATED"
+            print("UPDATED")
             db.commit()
             return cursor.fetchone()
         except MySQLdb.Error as error:
             print("ERROR: {}".format(error))
             db.rollback()
         except Exception as error:
-            print error
+            print(error)
     else:
-        print "No log messages available for: ", date_of_log
+        print("No log messages available for: ", date_of_log)
 
 
 def get_summary_and_quotes_by_date(date):
