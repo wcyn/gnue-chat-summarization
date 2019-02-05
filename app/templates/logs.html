@@ -35,7 +35,7 @@
 
         <div class="summary">
             {% set s_sum = logs[0]['summary_sum'] if logs else None %}
-            <h4>Quotes and Summary ({{s_sum}} Quoted)</h4>
+            <h4>Quotes and Summary ({{s_sum}} Quoted) | {{logs_date}}</h4>
             {% for summary_quote in summary_and_quotes %}
                 <div class="summary-block">
                     {{summary_quote['para']}}

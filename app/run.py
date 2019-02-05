@@ -7,6 +7,7 @@ from .services.logs import (
     get_log_by_id,
     get_summary_and_quotes_by_date,
     get_username_colors,
+    generate_random_color,
     update_log_by_id,
     update_log_message_summaries
 )
@@ -28,8 +29,8 @@ def logs_page(logs_date):
 
     logs = get_logs_by_date(logs_date)
     if request.method == "GET":
-        usernames = {log.get('send_user') for log in logs}
-        username_colors = get_username_colors(usernames)
+        username_colors = {log.get('send_user'): generate_random_color() for log in logs}
+        # username_colors = get_username_colors(usernames)
         summary_and_quotes = get_summary_and_quotes_by_date(logs_date)
         # summary, quotes = [], []
         # for s, q in summary_and_quotes:
