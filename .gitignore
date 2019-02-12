@@ -6,4 +6,4 @@ chatLogs2/
 *.pyc
 .vscode/
 env.sh
-app/services/.ipynb_checkpoints/
+*/.ipynb_checkpoints/

@@ -2,7 +2,7 @@
 Collectors for the GNUe "gold standard" irc summaries and original irc logs. Cloned from https://github.com/FLOSSmole/GNUeIRC
 
 
-##Original Logs
+## Original Logs
 
 Step 1: Make a list of URLs where the logs are. 
 *  This is stored in listOfUrlsForChatLogs.txt  
@@ -24,7 +24,7 @@ Step 4: Parse logfiles
 *  Note that the original log files have no timestamps
 *  The dates are constructed via the file name
 
-##Summaries of Logs
+## Summaries of Logs
 
 Step 1: Make a list of URLs where the summaries are. This is stored in listOfUrlsForSummariesXML.txt
 *  Summaries sometimes skip numbers: summaries 96, 100, and 104 do not exist
