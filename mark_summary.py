@@ -67,7 +67,7 @@ def mark_quoted_logs_as_summary_per_date(date_of_log):
     log_ids = get_log_ids_of_quoted_logs(date_of_log)
     format_ids = ','.join(['%s'] * len(log_ids))
     log_ids.append(date_of_log)
-    print date_of_log
+    print(date_of_log)
     if len(log_ids) > 1:
         try:
             cursor.execute(
@@ -79,7 +79,7 @@ def mark_quoted_logs_as_summary_per_date(date_of_log):
         except MySQLdb.Error as error:
             print("ERROR: {}".format(error))
     else:
-        print "No quotes found for: ", date_of_log
+        print("No quotes found for: ", date_of_log)
 
 
 def mark_all_quoted_logs_as_summary():
@@ -92,7 +92,7 @@ def mark_all_quoted_logs_as_summary():
         for (date_of_log,) in cursor.fetchall():
             if "2001-10-23" <= date_of_log <= "2006-09-21":
                 # print date_of_log
-                print 'Processing Log: ', date_of_log
+                print('Processing Log: ', date_of_log)
                 mark_quoted_logs_as_summary_per_date(date_of_log)
 
     except MySQLdb.Error as error:

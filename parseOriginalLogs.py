@@ -26,9 +26,9 @@ for filename in files:
     for line in log:
         line_count += 1
         # case 1: user message
-        patternMessage = re.compile(ur'^<(.+?)>\s(.+?)$', re.UNICODE)
+        patternMessage = re.compile(r'^<(.+?)>\s(.+?)$', re.UNICODE)
         # case 2: newer system message with *** at the front
-        patternSystem = re.compile(ur'^\*\*\*\s(.+?)$', re.UNICODE)
+        patternSystem = re.compile(r'^\*\*\*\s(.+?)$', re.UNICODE)
 
         if patternMessage.search(line):
             username = patternMessage.search(line).group(1)
