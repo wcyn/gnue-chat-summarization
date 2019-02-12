@@ -5,3 +5,5 @@ chatLogs2/
 .DS_Store
 *.pyc
 .vscode/
+env.sh
+app/services/.ipynb_checkpoints/

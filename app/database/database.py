@@ -1,15 +1,15 @@
 import MySQLdb
 import MySQLdb.cursors as cursors
+import os
 
-
-class DatabaseConnection(object):
+class DatabaseConnection:
 
     def __init__(self):
         self.db = MySQLdb.connect(
-            host="127.0.0.1",
-            user="root",
-            passwd="bubo1234",
-            db="gnue_irc",
+            host=os.environ.get("DB_HOST"),
+            user=os.environ.get("DB_USER"),
+            passwd=os.environ.get("DB_PASS"),
+            db=os.environ.get("DB_NAME"),
             use_unicode=True,
             charset="utf8",
             cursorclass=cursors.DictCursor
