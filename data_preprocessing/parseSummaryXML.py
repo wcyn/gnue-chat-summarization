@@ -4,7 +4,7 @@ import MySQLdb
 import re
 
 from bs4 import BeautifulSoup
-from app.database import DatabaseConnection
+from app.database.database import DatabaseConnection
 from os import listdir
 from os.path import isfile, join
 
