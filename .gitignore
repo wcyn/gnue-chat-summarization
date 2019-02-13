@@ -7,3 +7,4 @@ chatLogs2/
 .vscode/
 env.sh
 */.ipynb_checkpoints/
+*/gnue_irc_chat_logs.tsv
