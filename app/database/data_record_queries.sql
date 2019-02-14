@@ -19,4 +19,5 @@ ORDER BY MIN(gnu.log_id) ASC
 ;
 
 
-SELECT * FROM GNUeIRCLogs;
+SELECT * FROM GNUeIRCLogs where GNUeIRCLogs.log_id>=539209;
+
