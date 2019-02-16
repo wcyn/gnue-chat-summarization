@@ -18,6 +18,6 @@ GROUP BY gnu.date_of_log
 ORDER BY MIN(gnu.log_id) ASC
 ;
 
+SELECT * FROM GNUeIRCLogs where GNUeIRCLogs.log_id = 16183;
 
-SELECT * FROM GNUeIRCLogs where GNUeIRCLogs.log_id>=539209;
-
+SELECT line_message FROM GNUeIRCLogs;

@@ -8,3 +8,5 @@ chatLogs2/
 env.sh
 */.ipynb_checkpoints/
 */gnue_irc_chat_logs.tsv
+models_and_data/
+example_files/
