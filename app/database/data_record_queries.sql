@@ -13,7 +13,7 @@ ORDER BY log_id;
 
 SELECT MIN(gnu.log_id) AS min_log_id, gnu.date_of_log, COUNT(gnu.log_id) as chat_line_count
 FROM (SELECT log_id, date_of_log FROM GNUeIRCLogs) AS gnu
-# WHERE date_of_log >= '2001-10-23' AND date_of_log <= '2001-11-18'
+-- WHERE date_of_log >= '2001-10-23' AND date_of_log <= '2001-11-18'
 GROUP BY gnu.date_of_log
 ORDER BY MIN(gnu.log_id) ASC
 ;
