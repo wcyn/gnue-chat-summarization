@@ -21,3 +21,9 @@ ORDER BY MIN(gnu.log_id) ASC
 SELECT * FROM GNUeIRCLogs where GNUeIRCLogs.log_id = 16183;
 
 SELECT line_message FROM GNUeIRCLogs;
+
+SELECT log_id FROM GNUeIRCLogs 
+-- WHERE date_of_log >= '2001-10-23' AND date_of_log <= '2001-11-18'
+ORDER BY log_id ASC;
+
+

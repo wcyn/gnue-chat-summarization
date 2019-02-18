@@ -12,3 +12,8 @@ models_and_data/
 */example_files/
 */viewing_only_files
 __pycache__
+
+# Data files
+feature_extraction/feature_outputs/sentence_embeddings*
+feature_extraction/feature_outputs/features.csv
+feature_extraction/feature_outputs/summarized_chats_features.csv
