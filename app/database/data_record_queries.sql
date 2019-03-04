@@ -13,17 +13,19 @@ ORDER BY log_id;
 
 SELECT MIN(gnu.log_id) AS min_log_id, gnu.date_of_log, COUNT(gnu.log_id) as chat_line_count
 FROM (SELECT log_id, date_of_log FROM GNUeIRCLogs) AS gnu
--- WHERE date_of_log >= '2001-10-23' AND date_of_log <= '2001-11-18'
+WHERE date_of_log >= '2001-10-23' AND date_of_log <= '2001-11-18'
 GROUP BY gnu.date_of_log
 ORDER BY MIN(gnu.log_id) ASC
 ;
 
 SELECT * FROM GNUeIRCLogs where GNUeIRCLogs.log_id = 16183;
 
-SELECT line_message FROM GNUeIRCLogs;
+SELECT GNUeIRCLogs.line_message FROM GNUeIRCLogs;
 
-SELECT log_id FROM GNUeIRCLogs 
--- WHERE date_of_log >= '2001-10-23' AND date_of_log <= '2001-11-18'
+
+SELECT log_id, is_summary FROM GNUeIRCLogs
+WHERE date_of_log >= '2001-10-23' AND date_of_log <= '2001-11-18'
 ORDER BY log_id ASC;
 
 
+1259 + 439 + 448 + 1132 + 255 + 481 + 653 + 393 + 191 + 604 + 220 + 893 + 627 + 2043 + 800 + 1990 + 1051 + 536 + 1053 + 1348
