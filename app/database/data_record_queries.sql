@@ -30,4 +30,4 @@ WHERE date_of_log >= '2001-10-23' AND date_of_log <= '2001-11-18'
 ORDER BY log_id ASC;
 
 
-1259 + 439 + 448 + 1132 + 255 + 481 + 653 + 393 + 191 + 604 + 220 + 893 + 627 + 2043 + 800 + 1990 + 1051 + 536 + 1053 + 1348
+# UPDATE GNUeIRCLogs SET prediction=0;

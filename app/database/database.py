@@ -2,6 +2,7 @@ import MySQLdb
 import MySQLdb.cursors as cursors
 import os
 
+
 class DatabaseConnection:
 
     def __init__(self):
