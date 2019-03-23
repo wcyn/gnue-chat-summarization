@@ -30,20 +30,13 @@ def logs_page(logs_date):
     logs = get_logs_by_date(logs_date)
     if request.method == "GET":
         username_colors = {log.get('send_user'): generate_random_color() for log in logs}
-        # username_colors = get_username_colors(usernames)
         summary_and_quotes = get_summary_and_quotes_by_date(logs_date)
-        # summary, quotes = [], []
-        # for s, q in summary_and_quotes:
-        #     summary.append(s)
-
-        t = time.strptime('20110531', '%Y%m%d')
-        newdate = date(t.tm_year, t.tm_mon, t.tm_mday) + timedelta(1)
-        print(newdate.strftime('%Y%m%d'))
         current_date = time.strptime(logs_date, '%Y-%m-%d')
         previous_date = (date(
             current_date.tm_year, current_date.tm_mon, current_date.tm_mday) - timedelta(1)).strftime('%Y-%m-%d')
         next_date = (date(
             current_date.tm_year, current_date.tm_mon, current_date.tm_mday) + timedelta(1)).strftime('%Y-%m-%d')
+
         return render_template(
             'logs.html',
             logs_date=logs_date,

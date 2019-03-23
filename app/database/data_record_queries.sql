@@ -26,8 +26,22 @@ SELECT GNUeIRCLogs.line_message FROM GNUeIRCLogs;
 
 
 SELECT log_id, is_summary FROM GNUeIRCLogs
+-- WHERE date_of_log >= '2001-10-23' AND date_of_log <= '2001-11-18'
+ORDER BY log_id ASC;
+
+
+SELECT log_id, date_of_log, is_summary FROM GNUeIRCLogs
 WHERE date_of_log >= '2001-10-23' AND date_of_log <= '2001-11-18'
 ORDER BY log_id ASC;
 
 
+SET SESSION group_concat_max_len = 100000;
+SELECT date_of_log,
+GROUP_CONCAT(
+    log_id
+    ORDER BY log_id ASC SEPARATOR ','
+) AS log_ids_summary
+FROM gnue_irc.GNUeIRCLogs
+WHERE date_of_log >= '2001-10-23' AND date_of_log <= '2001-11-18'
+GROUP BY date_of_log;
 # UPDATE GNUeIRCLogs SET prediction=0;
