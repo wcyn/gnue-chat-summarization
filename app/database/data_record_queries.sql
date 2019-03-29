@@ -30,6 +30,11 @@ SELECT log_id, is_summary FROM GNUeIRCLogs
 ORDER BY log_id ASC;
 
 
+SELECT log_id, is_summary, prediction, date_of_log FROM GNUeIRCLogs
+WHERE date_of_log in ('2001-11-04', '2001-11-15', '2001-10-26', '2001-11-01', '2001-10-30')
+ORDER BY log_id ASC;
+
+
 SELECT log_id, date_of_log, is_summary FROM GNUeIRCLogs
 WHERE date_of_log >= '2001-10-23' AND date_of_log <= '2001-11-18'
 ORDER BY log_id ASC;

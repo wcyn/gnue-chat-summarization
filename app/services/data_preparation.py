@@ -7,12 +7,15 @@ from keras.utils import to_categorical
 from os.path import join
 from sklearn.preprocessing import StandardScaler
 
-DATA_FILES_DIR = join("..", "..", "feature_extraction", "data_files")
-DATA_FILES_V2_DIR = join("..", "..", "feature_extraction", "data_files_v2")
-FEATURES_DIR = join("..", "..", "feature_extraction", "feature_outputs")
+# DATA_FILES_DIR = join("..", "..", "feature_extraction", "data_files")
+# DATA_FILES_V2_DIR = join("..", "..", "feature_extraction", "data_files_v2")
+# FEATURES_DIR = join("..", "..", "feature_extraction", "feature_outputs")
+
+DATA_FILES_DIR = join("feature_extraction", "data_files")
+DATA_FILES_V2_DIR = join("feature_extraction", "data_files_v2")
+FEATURES_DIR = join("feature_extraction", "feature_outputs")
 
 ALL_CHAT_FEATURES_FILENAME = join(FEATURES_DIR, "all_chat_features.csv")
-CHAT_LOGS_FILENAME = join(DATA_FILES_DIR, "gnue_irc_chat_logs_preprocessed.txt")
 CONVERSATION_LOG_IDS_FILENAME = join(DATA_FILES_V2_DIR, "conversation_log_ids.json")
 SUMMARIZED_CHAT_DATE_PARTITIONS_FILENAME = join(
     DATA_FILES_DIR, "summarized_chat_date_partitions_cumulative_count.csv"
@@ -79,38 +82,81 @@ def validate_column_order(columns):
         if FEATURES_COLUMN_NAMES[expected_column_index] == columns[current_column_index]:
             current_column_index += 1
         expected_column_index += 1
-    return current_column_index == len(columns)
+    if current_column_index != len(columns):
+        raise ValueError("Wrong column order: ", columns)
 
 
 def validate_column_names(column_names):
-    return column_names == FEATURES_COLUMN_NAMES
+    if column_names != FEATURES_COLUMN_NAMES:
+        raise ValueError("Column names do not match expected column names")
 
 
-def validate_total_number_of_records(records_data_frames_dict):
-    train_rows = records_data_frames_dict["train_features_X"].shape[0]
-    validation_rows = records_data_frames_dict["validation_features_X"].shape[0]
-    test_rows = records_data_frames_dict["test_features_X"].shape[0]
-    return train_rows + validation_rows + test_rows == TOTAL_NUMBER_OF_CHATS
+def validate_total_number_of_records(records_data_frames_dict, with_labels=False):
+    total_records = 0
+    for records in records_data_frames_dict.values():
+
+        total_records += len(records)
+    if with_labels:
+        total_records //= 2
+
+    if total_records != TOTAL_NUMBER_OF_CHATS:
+        raise ValueError("Number of records ({}) does not match the expected total number ({})".format(
+            total_records, TOTAL_NUMBER_OF_CHATS
+        ))
 
 
 def convert_list_to_data_frame(data_records, column_names):
     return pd.DataFrame(data_records, columns=column_names)
 
 
-def get_train_validation_and_test_data(
-        features_filename,
-        train_validation_and_test_dates,
-        conversation_log_ids_dict
-):
+def concatenate_data_type_log_ids(train_validation_and_test_dates, conversation_log_ids_dict):
     """
-    Get features data for train, validation and test sets
-    :param features_filename: The path to the file that contains all the features
-    :param train_validation_and_test_dates: Dates for the training, validation and test sets
-    :param conversation_log_ids_dict: A dictionary containing dates as keys and values as a list of log_ids in the shape:
+    :param train_validation_and_test_dates: Dates for the training, validation and test sets. Have the shape:
+        {
+            "train": [date_4, date_1, date_6, ...],
+            "validation": [date_8, date_3, date_9, ...],
+            "test": [date_5, date_2, date_7, ...],
+        }
+    :param conversation_log_ids_dict: A dictionary containing dates as keys and values as
+     a list of log_ids in the shape:
         {
             "date_of_log_1": [log_id_1, log_id_2, ...],
             "date_of_log_2": [log_id_56, log_id_57, ...]
         }
+    :return: Concatenated_log_ids_for each data type (ie. train, validation etc.) in the shape:
+        {
+            "train": [log_id_1, log_id_2, ...],
+            "validation": [log_id_56, log_id_57, ...]
+            "test": [log_id_71, log_id_72, ...]
+        }
+    """
+    data_type_log_ids = {
+        "train": [],
+        "validation": [],
+        "test": []
+    }
+    for data_type, dates in train_validation_and_test_dates.items():
+        for date in dates:
+            log_ids_for_date = conversation_log_ids_dict[date]
+            data_type_log_ids[data_type].extend(log_ids_for_date)
+
+    validate_total_number_of_records(data_type_log_ids)
+    return data_type_log_ids
+
+
+def get_train_validation_and_test_data(
+        features_filename,
+        data_type_log_ids
+):
+    """
+    Get features data for train, validation and test sets
+    :param data_type_log_ids: dict containing all log ids for each data type. Has the form:
+        {
+            "train": [log_id_1, log_id_2, ...],
+            "validation": [log_id_56, log_id_57, ...]
+            "test": [log_id_71, log_id_72, ...]
+        }
+    :param features_filename: The path to the file that contains all the features
     :return: Pandas DataFrame with the shape:
         {
             "train_features_X": Pandas DataFrame,
@@ -125,23 +171,18 @@ def get_train_validation_and_test_data(
     data_records = {
         key: [] for key in FEATURES_DATA_KEYS ^ LABELS_DATA_KEYS
     }
-    linecache.getline(features_filename, 33)
     column_names = linecache.getline(features_filename, 1).strip().split(",")
 
-    if not validate_column_names(column_names):
-        raise ValueError("Column names do not match expected column names")
+    validate_column_names(column_names)
 
-    for data_type, dates in train_validation_and_test_dates.items():
+    for data_type, log_ids in data_type_log_ids.items():
         x_data_key, y_data_key = data_type + "_features_X", data_type + "_y"
-        for date in dates:
-            log_ids = conversation_log_ids_dict[date]
-            for log_id in log_ids:
-                feature_data = linecache.getline(features_filename, log_id + 1).strip().split(",")
-                feature_data = [float(value) for value in feature_data]
-                # print(feature_data)
-                assert int(feature_data[0]) == log_id
-                data_records[x_data_key].append(feature_data[:-1])
-                data_records[y_data_key].append(feature_data[-1])
+        for log_id in log_ids:
+            feature_data = linecache.getline(features_filename, log_id + 1).strip().split(",")
+            feature_data = [float(value) for value in feature_data]
+            assert int(feature_data[0]) == log_id
+            data_records[x_data_key].append(feature_data[:-1])
+            data_records[y_data_key].append(feature_data[-1])
 
     x_column_names, y_column_name = column_names[:-1], column_names[-1:]
 
@@ -154,14 +195,28 @@ def get_train_validation_and_test_data(
         else:
             raise ValueError("Invalid Data Key: ", data_type)
         data_records[data_type] = convert_list_to_data_frame(data_record_group, column_names)
-    if not validate_total_number_of_records(data_records):
-        raise ValueError("Number of records does not match the expected total number")
+    validate_total_number_of_records(data_records, with_labels=True)
+
     return data_records
 
 
 def get_conversation_log_ids():
+    """
+    Load conversation log ids. Is in the form:
+        {
+            "date_of_log_1": [log_id_1, log_id_2, ...],
+            "date_of_log_2": [log_id_56, log_id_57, ...]
+        }
+    :return:
+    """
     with open(CONVERSATION_LOG_IDS_FILENAME) as f:
         return json.load(f)
+
+
+# conversation_log_ids = get_conversation_log_ids()
+# train_validation_and_test_dates = get_train_validation_and_test_dates(list(conversation_log_ids.keys()))
+# import pprint
+# pprint.pprint(concatenate_data_type_log_ids(train_validation_and_test_dates, conversation_log_ids))
 
 
 def normalize_data_set(
@@ -194,8 +249,8 @@ def standardize_data_set(data_set_df):
     scaler.fit(data_set_df)
     scaled_array = scaler.transform(data_set_df)
     columns = data_set_df.columns.values
-    if not validate_column_order(columns):
-        raise ValueError("Wrong column order: ", columns)
+    validate_column_order(columns)
+
     return pd.DataFrame(scaled_array,  columns=data_set_df.columns.values)
 
 
@@ -236,18 +291,17 @@ def process_data_sets_for_model(
     """
     Drop unnecessary columns and normalize data in preparation for the model
     :param columns_to_drop: The columns to drop from the features DataFrames
-    :param train_validation_and_test_data: dict containing Pandas DataFrames. Has the shape:
+    :param train_validation_and_test_data: dict containing features and labels. Has the shape:
         {
             "train_features_X": Pandas DataFrame,
             "validation_features_X": Pandas DataFrame,
             "test_features_X": Pandas DataFrame,
-            "train_y": Pandas DataFrame,
-            "validation_y": Pandas DataFrame,
-            "test_y": Pandas DataFrame,
+            "train_y": array one-hot vector,
+            "validation_y": array one-hot vector,
+            "test_y": array one-hot vector,
         }
     :return: A dict of Pandas DataFrames with processed data
     """
-    # import pdb; pdb.set_trace()
     for data_key, data_records in train_validation_and_test_data.items():
         if data_key in FEATURES_DATA_KEYS:
             train_validation_and_test_data[data_key] = process_features_data(
@@ -260,23 +314,32 @@ def process_data_sets_for_model(
         else:
             raise ValueError("Invalid Data Key: ", data_key)
 
-    if not validate_total_number_of_records(train_validation_and_test_data):
-        raise ValueError("Number of records does not match the expected total number")
+    validate_total_number_of_records(train_validation_and_test_data, with_labels=True)
 
     return train_validation_and_test_data
 
 
-def main():
+def get_processed_data_sets_for_model():
     conversation_log_ids = get_conversation_log_ids()
     train_validation_and_test_dates = get_train_validation_and_test_dates(list(conversation_log_ids.keys()))
+    data_type_log_ids = concatenate_data_type_log_ids(train_validation_and_test_dates, conversation_log_ids)
     data = get_train_validation_and_test_data(
         ALL_CHAT_FEATURES_FILENAME,
-        train_validation_and_test_dates,
-        conversation_log_ids
+        data_type_log_ids
     )
 
-    return process_data_sets_for_model(data)
+    return process_data_sets_for_model(data), data_type_log_ids, train_validation_and_test_dates
 
 
 if __name__ == "__main__":
-    print(main()["test_features_X"].tail())
+    print(get_processed_data_sets_for_model()[0]["test_features_X"].tail())
+
+
+"""
+      absolute_sentence_position  ...  normalized_mean_tf_isf
+3400                    1.666524  ...               -0.859767
+3401                    1.682270  ...                0.163343
+3402                    1.698016  ...               -0.397122
+3403                    1.713762  ...               -0.957587
+3404                    1.729508  ...                1.090890
+"""
