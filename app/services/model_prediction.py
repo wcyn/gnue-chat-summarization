@@ -16,6 +16,9 @@ db, cursor = connection.db, connection.cursor
 MODEL_FILENAMES = {
     "hybrid_lstm_feed_forward": join(
         DATA_FILES_DIR, "models", "merged_hybrid_model.h5"
+    ),
+    "feed_forward": join(
+        DATA_FILES_DIR, "models", "04-02_963_1000_64_adam_5min_ff_neural_net.h5"
     )
 }
 
@@ -91,10 +94,10 @@ def get_log_ids_for_true_predictions(predictions, log_ids, predictions_index=-1)
     """
     predictions_argmax = np.argmax(predictions[predictions_index], axis=1)
     print(predictions_argmax)
-    print(len(predictions_argmax))
     true_predictions_log_ids = {
         log_ids[index] for index, label in enumerate(predictions_argmax) if label == 1
     }
+    print(true_predictions_log_ids)
     return true_predictions_log_ids
 
 
@@ -103,7 +106,6 @@ def update_chat_log_predictions(true_predictions_log_ids, all_log_ids):
         (str(log), 1) if log in true_predictions_log_ids
         else (str(log), 0) for log in all_log_ids)
     logs_prediction_format = ", ".join([str(log) for log in logs_predictions_tuples])
-    print(logs_prediction_format)
 
     if true_predictions_log_ids:
         try:
@@ -113,7 +115,7 @@ def update_chat_log_predictions(true_predictions_log_ids, all_log_ids):
                 u"ON DUPLICATE KEY UPDATE log_id=VALUES(log_id), "
                 u"prediction=VALUES(prediction)".format(logs_prediction_format),
             )
-            print("UPDATED")
+            print("{} TOTAL CHAT LOG PREDICTIONS UPDATED".format(len(all_log_ids)))
             db.commit()
             return cursor.fetchone()
         except MySQLdb.Error as error:
@@ -128,17 +130,25 @@ def update_chat_log_predictions(true_predictions_log_ids, all_log_ids):
 if __name__ == "__main__":
     processed_data, data_type_log_ids, train_validation_and_test_dates = get_processed_data_sets_for_model()
     processed_data_set = get_processed_data_set(processed_data, "test")
+    # preds = generate_predictions(
+    #     [get_chat_log_sequences(data_type_log_ids["test"]), processed_data_set["input_features"]]
+    # )
     preds = generate_predictions(
-        [get_chat_log_sequences(data_type_log_ids["test"]), processed_data_set["input_features"]]
+        [processed_data_set["input_features"]], model_name="feed_forward"
     )
-    log_ids_for_true_predictions = get_log_ids_for_true_predictions(preds, data_type_log_ids["test"])
+    # print(preds)
+    log_ids_for_true_predictions = get_log_ids_for_true_predictions(
+        [preds],
+        data_type_log_ids["test"],
+        predictions_index=-1
+    )
+    all_log_ids = data_type_log_ids["test"] + data_type_log_ids["train"] + data_type_log_ids["validation"]
 
     # print(log_ids_for_true_predictions)
     print(len(log_ids_for_true_predictions))
 
     actual_labels = np.argmax(processed_data["test_y"], axis=1)
-    print(actual_labels, len(actual_labels))
-    print(len([i for i in actual_labels if i == 1]))
-    print("Dates:\n-----\n", train_validation_and_test_dates)
+    # print(len([i for i in actual_labels if i == 1]))
+    print("\nTrain Dates\n----------\n", train_validation_and_test_dates["train"])
 
-    update_chat_log_predictions(log_ids_for_true_predictions, data_type_log_ids["test"])
+    update_chat_log_predictions(log_ids_for_true_predictions, all_log_ids)

@@ -7,9 +7,10 @@ from keras.utils import to_categorical
 from os.path import join
 from sklearn.preprocessing import StandardScaler
 
-# DATA_FILES_DIR = join("..", "..", "feature_extraction", "data_files")
-# DATA_FILES_V2_DIR = join("..", "..", "feature_extraction", "data_files_v2")
-# FEATURES_DIR = join("..", "..", "feature_extraction", "feature_outputs")
+# DATA_FILES_DIR = join("..", "feature_extraction", "data_files")
+# DATA_FILES_V2_DIR = join("..", "feature_extraction", "data_files_v2")
+# FEATURES_DIR = join("..", "feature_extraction", "feature_outputs")
+
 
 DATA_FILES_DIR = join("feature_extraction", "data_files")
 DATA_FILES_V2_DIR = join("feature_extraction", "data_files_v2")

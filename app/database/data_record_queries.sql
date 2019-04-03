@@ -50,3 +50,19 @@ FROM gnue_irc.GNUeIRCLogs
 WHERE date_of_log >= '2001-10-23' AND date_of_log <= '2001-11-18'
 GROUP BY date_of_log;
 # UPDATE GNUeIRCLogs SET prediction=0;
+
+INSERT INTO conversation_statistics (
+conversation_date, number_of_true_predictions,
+number_of_summaries, number_of_sentences)
+VALUES ('2001-11-05', 0, 127, 2295)
+ON DUPLICATE KEY UPDATE
+number_of_true_predictions=VALUES(number_of_true_predictions),
+number_of_summaries=VALUES(number_of_summaries),
+number_of_sentences=VALUES(number_of_sentences);
+
+
+-- DELETE FROM conversation_statistics;
+
+
+SELECT * FROM GNUeIRCLogs
+WHERE log_id=526850;

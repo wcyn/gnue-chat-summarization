@@ -135,3 +135,12 @@ CREATE TABLE GNUeIRCLogs
 CREATE INDEX date_of_log
   ON GNUeIRCLogs (date_of_log);
 
+CREATE TABLE conversation_statistics
+			(
+			number_of_summaries INT DEFAULT 0 NOT NULL,
+			number_of_true_predictions INT DEFAULT 0 NOT NULL,
+			in_last_predicted_group BOOLEAN DEFAULT FALSE ,
+			number_of_sentences INT DEFAULT 0 NOT NULL,
+			conversation_date VARCHAR(64) PRIMARY KEY
+			)
+

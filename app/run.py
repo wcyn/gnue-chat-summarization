@@ -9,8 +9,8 @@ from .services.logs import (
     get_username_colors,
     generate_random_color,
     update_log_by_id,
-    update_log_message_summaries
-)
+    update_log_message_summaries,
+    get_conversation_statistics_by_date)
 
 app = Flask(__name__, template_folder='templates')
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
@@ -29,6 +29,7 @@ def logs_page(logs_date):
 
     logs = get_logs_by_date(logs_date)
     if request.method == "GET":
+        conversation_statistics = get_conversation_statistics_by_date(logs_date)
         username_colors = {log.get('send_user'): generate_random_color() for log in logs}
         summary_and_quotes = get_summary_and_quotes_by_date(logs_date)
         current_date = time.strptime(logs_date, '%Y-%m-%d')
@@ -41,6 +42,7 @@ def logs_page(logs_date):
             'logs.html',
             logs_date=logs_date,
             logs=logs,
+            conversation_statistics=conversation_statistics,
             username_colors=username_colors,
             summary_and_quotes=summary_and_quotes,
             previous_date=previous_date,

@@ -1,18 +1,13 @@
 import random
 import MySQLdb
-import numpy as np
+import pandas as pd
 
 from app.database import database
 from os.path import join
 
 connection = database.DatabaseConnection()
 db, cursor = connection.db, connection.cursor
-DATA_FILES_DIR = join("..", "feature_extraction", "data_files")
-MODEL_FILENAMES = {
-    "hybrid_lstm_feed_forward": join(
-        DATA_FILES_DIR, "models", "merged_hybrid_model.h5"
-    )
-}
+DATA_FILES_DIR = join("feature_extraction", "data_files")
 LOG_IDS_FILENAME = join(
     DATA_FILES_DIR, "summarized_chat_log_ids.csv"
 )
@@ -21,14 +16,26 @@ LOG_IDS_FILENAME = join(
 def get_logs_by_date(date_of_log):
     try:
         cursor.execute(
-            u"SELECT log_id, line_message, is_summary, send_user, "
-            u"SUM(is_summary) OVER () AS summary_sum "
+            u"SELECT log_id, line_message, is_summary, prediction, send_user "
             u"FROM GNUeIRCLogs "
             u"WHERE date_of_log=%s ", (date_of_log,)
         )
         return cursor.fetchall()
     except MySQLdb.Error as error:
         print("ERROR: {}".format(error))
+        db.rollback()
+
+
+def get_conversation_statistics_by_date(date_of_log):
+    try:
+        cursor.execute(
+            u"SELECT number_of_sentences, number_of_summaries, number_of_true_predictions "
+            u"FROM conversation_statistics "
+            u"WHERE conversation_date=%s ", (date_of_log,)
+        )
+        return cursor.fetchone()
+    except MySQLdb.Error as error:
+        print("ERROR GETTING CONVERSATION STATISTICS: {}".format(error))
         db.rollback()
 
 
@@ -54,6 +61,48 @@ def get_log_by_id(log_id):
         return cursor.fetchone()
     except MySQLdb.Error as error:
         print("ERROR: {}".format(error))
+        db.rollback()
+    except Exception as error:
+        print(error)
+
+
+def update_conversation_statistics_by_date(date_of_logs):
+    logs = get_logs_by_date(date_of_logs)
+
+    number_of_summaries = number_of_true_predictions = number_of_sentences = 0
+    for log in logs:
+        number_of_true_predictions += log["prediction"]
+        number_of_summaries += log["is_summary"]
+        number_of_sentences += 1
+
+    values = {
+        "conversation_date": date_of_logs,
+        "number_of_true_predictions": number_of_true_predictions,
+        "number_of_summaries": number_of_summaries,
+        "number_of_sentences": number_of_sentences,
+    }
+
+    try:
+        cursor.execute(
+            u"INSERT INTO conversation_statistics ("
+            u"conversation_date, number_of_true_predictions, "
+            u"number_of_summaries, number_of_sentences) "
+            u"VALUES ('{conversation_date}', {number_of_true_predictions}, "
+            u"{number_of_summaries}, {number_of_sentences}) "
+            u"ON DUPLICATE KEY UPDATE "
+            u"conversation_date=VALUES(conversation_date), "
+            u"number_of_true_predictions=VALUES(number_of_true_predictions), "
+            u"number_of_summaries=VALUES(number_of_summaries), "
+            u"number_of_sentences=VALUES(number_of_sentences)".format(
+                **values
+            )
+        )
+        print("UPDATED CONVERSATION STATISTICS FOR DATE: ", date_of_logs)
+        db.commit()
+        return cursor.fetchone()
+    except MySQLdb.Error as error:
+        print("ERROR: {}".format(error))
+        print(cursor.description)
         db.rollback()
     except Exception as error:
         print(error)
@@ -151,3 +200,21 @@ def get_summary_and_quotes_by_date(date):
     except MySQLdb.Error as error:
         print("ERROR: {}".format(error))
         db.rollback()
+
+
+def update_conversations_for_summaries():
+    summarized_chat_date_partitions_filename = join(
+        DATA_FILES_DIR, "summarized_chat_date_partitions_cumulative_count.csv"
+    )
+    summarized_chat_date_partitions = pd.read_csv(
+        summarized_chat_date_partitions_filename
+    )
+    chat_dates = summarized_chat_date_partitions.date_of_log.values
+
+    for chat_date in chat_dates:
+        update_conversation_statistics_by_date(chat_date)
+
+
+if __name__ == "__main__":
+    update_conversations_for_summaries()
+

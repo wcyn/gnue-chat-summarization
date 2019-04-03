@@ -7,6 +7,8 @@ from keras.preprocessing import sequence
 from os.path import join
 
 CHAT_LOGS_FILENAME = join(DATA_FILES_DIR, "gnue_irc_chat_logs_preprocessed.txt")
+MAX_CHAT_LENGTH = 100
+TOP_WORDS = 100000
 
 
 def _get_summarized_chat_logs(chat_logs_filename, chat_log_ids):
@@ -43,8 +45,7 @@ def _generate_chat_log_sequences(chat_logs):
 
 
 def _pad_sequences(sequences):
-    max_chat_length = 73
-    return sequence.pad_sequences(sequences, maxlen=max_chat_length)
+    return sequence.pad_sequences(sequences, maxlen=MAX_CHAT_LENGTH)
 
 
 # sequences = _generate_chat_log_sequences(chat_logs)
@@ -54,7 +55,10 @@ def _pad_sequences(sequences):
 
 
 def get_chat_log_sequences(log_ids):
-    chat_logs = _get_summarized_chat_logs(CHAT_LOGS_FILENAME, log_ids)
+    chat_logs = get_chat_logs(log_ids)
     sequences = _generate_chat_log_sequences(chat_logs)
-    return _pad_sequences(sequences)
+    return _pad_sequences(sequences), chat_logs
 
+
+def get_chat_logs(log_ids):
+    return _get_summarized_chat_logs(CHAT_LOGS_FILENAME, log_ids)

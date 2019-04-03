@@ -2,70 +2,75 @@
 
 {% block content %}
     <div class="chat-logs">
-        <div class="navigation">
+        <div class="navigation" id="main-nav-bar">
             <span class="date-header">{{ logs_date }}</span>
+            <span class="chat-statistics"><strong>Total Chats:</strong> {{conversation_statistics['number_of_sentences']}} </span>
+            <span class="chat-statistics"><strong>True Predictions:</strong> {{conversation_statistics['number_of_true_predictions']}} </span>
             <a class="previous-date" href="{{ url_for('logs_page', **{'logs_date': previous_date}) }}">Previous ({{previous_date}}) </a>
             <a class="next-date" href="{{ url_for('logs_page', **{'logs_date': next_date}) }}">Next({{next_date}})</a>
         </div>
-        <form method="POST">
-            <table class="irclog">
-                <colgroup>
-                    <col style="width:10%">
-                    <col style="width:90%">
-                </colgroup>
-                <tr>
-                    <th class="username-header">Username</th>
-                    <th>Message <span class="summary-header">Is summary</span></th>
-                </tr>
-                {% for log in logs %}
-                    {% set username = log['send_user']%}
+        <div class="content">
+            <form method="POST">
+                <table class="irclog">
+                    <colgroup>
+                        <col style="width:10%">
+                        <col style="width:90%">
+                    </colgroup>
                     <tr>
-                        <td class="nick" style="color: {{username_colors[username]}}">{{username}}:</td>
-                        <td class="text tooltip" colspan="2" log_id="{{log['log_id']}}">{{log['line_message']}}
-                            <span class="tooltip-text">{{log['log_id']}}</span>
-                            <span class="summary-checkbox">
-                                <input type="checkbox" name="chat_log" value="{{log['log_id']}}" {% if log['is_summary'] %} checked="checked" {% endif %}>
-                            </span>
-                        </td>
+                        <th class="username-header">Username</th>
+                        <th>Message <span class="summary-header">Is summary</span></th>
                     </tr>
-                {% endfor %}
-            </table>
-            <input class="summary-submit" type="submit" value="Submit">
-        </form>
+                    {% for log in logs %}
+                        {% set username = log['send_user']%}
+                        <tr>
+                            <td class="nick" style="color: {{username_colors[username]}}">{{username}}:</td>
+                            <td class="text tooltip" colspan="2" log_id="{{log['log_id']}}">{{log['line_message']}}
+                                <span class="tooltip-text">{{log['log_id']}}</span>
+                                <span class="summary-checkbox">
+                                    <input type="checkbox" name="chat_log" value="{{log['log_id']}}" {% if log['is_summary'] %} checked="checked" {% endif %}>
+                                </span>
+                                <span class="prediction-indicator {% if log['prediction'] %} true-prediction{%else%} false-prediction{% endif %}"></span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+                <input class="summary-submit" type="submit" value="Submit">
+            </form>
 
-        <div class="summary">
-            {% set s_sum = logs[0]['summary_sum'] if logs else None %}
-            <h4>Quotes and Summary ({{s_sum}} Quoted) | {{logs_date}}</h4>
-            {% for summary_quote in summary_and_quotes %}
-                <div class="summary-block">
-                    {{summary_quote['para']}}
-                    <div class="quotes">
-                        {% set quotes = summary_quote['quotes'].split('^&##m*_^->') if summary_quote else [] %}
-                        {% set single_quotes = [] %}
-                        {% for quote in quotes %}
-                            {% if single_quotes.extend(quote.split('-')) %} {% endif %}
-                        {% endfor %}
-                        <h4>{{ single_quotes|length }} Quotes</h4>
+            <div class="summary">
+                {% set s_sum = logs[0]['summary_sum'] if logs else None %}
+                <h4>Quotes and Summaries ({{conversation_statistics['number_of_summaries']}} Quoted) | {{logs_date}}</h4>
+                {% for summary_quote in summary_and_quotes %}
+                    <div class="summary-block">
+                        {{summary_quote['para']}}
+                        <div class="quotes">
+                            {% set quotes = summary_quote['quotes'].split('^&##m*_^->') if summary_quote else [] %}
+                            {% set single_quotes = [] %}
+                            {% for quote in quotes %}
+                                {% if single_quotes.extend(quote.split('-')) %} {% endif %}
+                            {% endfor %}
+                            <h4>{{ single_quotes|length }} Quotes</h4>
 
-                        {% for quote in single_quotes %}
-                            <div class="quote-block">
-                                "{{quote}}"
-                            </div>
-                        {% endfor %}
+                            {% for quote in single_quotes %}
+                                <div class="quote-block">
+                                    "{{quote}}"
+                                </div>
+                            {% endfor %}
 
-                        {% if not quotes %}
-                            <div class="quote-block">
-                                No quotes exists for logs on this date
-                            </div>
-                        {% endif %}
+                            {% if not quotes %}
+                                <div class="quote-block">
+                                    No quotes exists for logs on this date
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
-            {% endfor %}
-            {% if not summary_and_quotes %}
-            <div class="summary-block">
-                No Summary exists for logs on this date
+                {% endfor %}
+                {% if not summary_and_quotes %}
+                    <div class="summary-block">
+                        No Summary exists for logs on this date
+                    </div>
+                {% endif %}
             </div>
-        {% endif %}
         </div>
     </div>
 {% endblock %}
