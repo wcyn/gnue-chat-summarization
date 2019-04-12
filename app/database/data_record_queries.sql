@@ -66,3 +66,9 @@ number_of_sentences=VALUES(number_of_sentences);
 
 SELECT * FROM GNUeIRCLogs
 WHERE log_id=526850;
+
+
+UPDATE GNUeIRCLogs
+SET categorical_value_1 = 0, categorical_value_2 = 0
+WHERE categorical_value_1 IS NULL OR categorical_value_2 IS NULL
+;

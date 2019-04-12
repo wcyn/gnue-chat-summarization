@@ -17,3 +17,5 @@ __pycache__
 feature_extraction/feature_outputs/sentence_embeddings*
 feature_extraction/feature_outputs/features.csv
 feature_extraction/feature_outputs/summarized_chats_features.csv
+app/services/chat_data_files/
+app/services/simple-examples/

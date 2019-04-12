@@ -52,6 +52,19 @@ def get_log_ids_and_messages_by_date(date_of_log):
         db.rollback()
 
 
+def get_log_messages_by_date(date_of_log):
+    try:
+        cursor.execute(
+            u"SELECT line_message "
+            u"FROM GNUeIRCLogs "
+            u"WHERE date_of_log=%s ", (date_of_log,)
+        )
+        return cursor
+    except MySQLdb.Error as error:
+        print("ERROR: {}".format(error))
+        db.rollback()
+
+
 def get_log_by_id(log_id):
     try:
         cursor.execute(

@@ -83,48 +83,63 @@ def generate_predictions(
     return model.predict(input_features)
 
 
-def get_log_ids_for_true_predictions(predictions, log_ids, predictions_index=-1):
+def get_prediction_labels(predictions, log_ids, predictions_index=-1):
     """
-    Get logs ids for sentences categorized as summaries.
+    Get prediction labels for each log_id.
     :param predictions: A list of zeros and ones representing model predictions
     :param log_ids: All log ids for the particular data slice
     :param predictions_index: The index to use for prediction values.
     Multi output models will have multiple predictions
     :return: a list of log ids with true predictions
     """
-    predictions_argmax = np.argmax(predictions[predictions_index], axis=1)
+    def get_label(categorical_values):
+        if categorical_values[0] > categorical_values[1]:
+            return 0
+        return 1
+    predictions = predictions[predictions_index]
+    predictions_argmax = np.argmax(predictions, axis=1)
     print(predictions_argmax)
     true_predictions_log_ids = {
         log_ids[index] for index, label in enumerate(predictions_argmax) if label == 1
     }
     print(true_predictions_log_ids)
-    return true_predictions_log_ids
+
+    prediction_labels = []
+    for prediction, log_id in zip(predictions, log_ids):
+        prediction_labels.append((str(log_id), get_label(prediction), prediction[0], prediction[1]))
+
+    return prediction_labels
 
 
-def update_chat_log_predictions(true_predictions_log_ids, all_log_ids):
+def update_chat_log_predictions(predictions_labels, data_type_log_ids, predicted_type="test"):
+    # logs_predictions_tuples = []
+    other_log_ids = []
+    for data_type, log_ids in data_type_log_ids.items():
+        if data_type != predicted_type:
+            other_log_ids.extend(log_ids)
+
     logs_predictions_tuples = (
-        (str(log), 1) if log in true_predictions_log_ids
-        else (str(log), 0) for log in all_log_ids)
-    logs_prediction_format = ", ".join([str(log) for log in logs_predictions_tuples])
-
-    if true_predictions_log_ids:
-        try:
-            cursor.execute(
-                u"INSERT INTO GNUeIRCLogs (log_id, prediction) "
-                u"VALUES {} "
-                u"ON DUPLICATE KEY UPDATE log_id=VALUES(log_id), "
-                u"prediction=VALUES(prediction)".format(logs_prediction_format),
-            )
-            print("{} TOTAL CHAT LOG PREDICTIONS UPDATED".format(len(all_log_ids)))
-            db.commit()
-            return cursor.fetchone()
-        except MySQLdb.Error as error:
-            print("ERROR: {}".format(error))
-            db.rollback()
-        except Exception as error:
-            print(error)
-    else:
-        print("No logs to update predictions for")
+        (str(log), 0, 0, 0) for log in other_log_ids)
+    predictions_labels += logs_predictions_tuples
+    logs_prediction_format = ", ".join([str(log) for log in predictions_labels])
+    # print(logs_prediction_format)
+    try:
+        cursor.execute(
+            u"INSERT INTO GNUeIRCLogs (log_id, prediction, categorical_value_1, categorical_value_2) "
+            u"VALUES {} "
+            u"ON DUPLICATE KEY UPDATE log_id=VALUES(log_id), "
+            u"prediction=VALUES(prediction), "
+            u"categorical_value_1=VALUES(categorical_value_1), "
+            u"categorical_value_2=VALUES(categorical_value_2)".format(logs_prediction_format),
+        )
+        print("{} TOTAL CHAT LOG PREDICTIONS UPDATED".format(len(predictions_labels)))
+        db.commit()
+        return cursor.fetchone()
+    except MySQLdb.Error as error:
+        print("ERROR: {}".format(error))
+        db.rollback()
+    except Exception as error:
+        print(error)
 
 
 if __name__ == "__main__":
@@ -137,18 +152,18 @@ if __name__ == "__main__":
         [processed_data_set["input_features"]], model_name="feed_forward"
     )
     # print(preds)
-    log_ids_for_true_predictions = get_log_ids_for_true_predictions(
+    prediction_labels = get_prediction_labels(
         [preds],
         data_type_log_ids["test"],
         predictions_index=-1
     )
-    all_log_ids = data_type_log_ids["test"] + data_type_log_ids["train"] + data_type_log_ids["validation"]
+    # all_log_ids = data_type_log_ids["test"] + data_type_log_ids["train"] + data_type_log_ids["validation"]
 
     # print(log_ids_for_true_predictions)
-    print(len(log_ids_for_true_predictions))
+    # print(len(log_ids_for_true_predictions))
 
     actual_labels = np.argmax(processed_data["test_y"], axis=1)
-    # print(len([i for i in actual_labels if i == 1]))
+    print(len([i for i in actual_labels if i == 1]))
     print("\nTrain Dates\n----------\n", train_validation_and_test_dates["train"])
 
-    update_chat_log_predictions(log_ids_for_true_predictions, all_log_ids)
+    update_chat_log_predictions(prediction_labels, data_type_log_ids)

@@ -4,17 +4,20 @@ import pandas as pd
 import random
 
 from keras.utils import to_categorical
-from os.path import join
+from app.services.logs import get_log_messages_by_date
+from os.path import join, exists
 from sklearn.preprocessing import StandardScaler
 
 # DATA_FILES_DIR = join("..", "feature_extraction", "data_files")
 # DATA_FILES_V2_DIR = join("..", "feature_extraction", "data_files_v2")
 # FEATURES_DIR = join("..", "feature_extraction", "feature_outputs")
 
-
 DATA_FILES_DIR = join("feature_extraction", "data_files")
 DATA_FILES_V2_DIR = join("feature_extraction", "data_files_v2")
 FEATURES_DIR = join("feature_extraction", "feature_outputs")
+
+CHAT_LOGS_FILENAME = join(DATA_FILES_DIR, "gnue_irc_chat_logs_preprocessed.txt")
+CHAT_DATA_TYPE_FILES = join("app", "services", "chat_data_files")
 
 ALL_CHAT_FEATURES_FILENAME = join(FEATURES_DIR, "all_chat_features.csv")
 CONVERSATION_LOG_IDS_FILENAME = join(DATA_FILES_V2_DIR, "conversation_log_ids.json")
@@ -23,6 +26,7 @@ SUMMARIZED_CHAT_DATE_PARTITIONS_FILENAME = join(
 )
 SUMMARIZED_CHAT_FEATURES_FILENAME = join(FEATURES_DIR, "summarized_chats_features.csv")
 SUMMARIZED_CHAT_LOG_IDS_FILENAME = join(DATA_FILES_DIR, "summarized_chat_log_ids.csv")
+TIME_OFFSET = 1554206530
 
 COLUMNS_TO_DROP = ["log_id", "mean_tf_idf", "mean_tf_isf"]
 FEATURES_COLUMN_NAMES = [  # In the correct order
@@ -233,15 +237,14 @@ def normalize_data_set(
     :param data_set_df: A pandas data frame containing the data to be normalized
     :return: A Pandas DataFrame containing the normalized data
     """
+    data_set_df = data_set_df.abs()
     data_max_values = data_set_df.max()
     data_min_values = data_set_df.min()
     new_data_set_df = data_set_df.copy()
 
     for column in columns_to_normalize:
-        new_data_set_df[column] = (
-                                           new_data_set_df[column] - data_min_values[column]) / (
-                                           data_max_values[column] - data_min_values[column]
-                                   )
+        new_data_set_df[column] = (new_data_set_df[column] - data_min_values[column]) / (
+                data_max_values[column] - data_min_values[column])
     return new_data_set_df
 
 
@@ -306,7 +309,8 @@ def process_data_sets_for_model(
     for data_key, data_records in train_validation_and_test_data.items():
         if data_key in FEATURES_DATA_KEYS:
             train_validation_and_test_data[data_key] = process_features_data(
-                train_validation_and_test_data[data_key], columns_to_drop
+                train_validation_and_test_data[data_key], columns_to_drop,
+                method="normalize"
             )
         elif data_key in LABELS_DATA_KEYS:
             train_validation_and_test_data[data_key] = process_labels_data(
@@ -320,6 +324,22 @@ def process_data_sets_for_model(
     return train_validation_and_test_data
 
 
+def create_test_validation_and_train_files(train_validation_and_test_dates):
+    for data_type, dates in train_validation_and_test_dates.items():
+        filename = join(CHAT_DATA_TYPE_FILES, data_type) + ".txt"
+        if exists(filename):
+            append_write = "a"  # append if already exists
+        else:
+            append_write = "w"
+
+        print(append_write)
+        with open(filename, append_write) as chat_data_file:
+            for date in dates:
+                messages = get_log_messages_by_date(date)
+                for message in messages:
+                    chat_data_file.write(message["line_message"] + "\n")
+
+
 def get_processed_data_sets_for_model():
     conversation_log_ids = get_conversation_log_ids()
     train_validation_and_test_dates = get_train_validation_and_test_dates(list(conversation_log_ids.keys()))
@@ -328,6 +348,7 @@ def get_processed_data_sets_for_model():
         ALL_CHAT_FEATURES_FILENAME,
         data_type_log_ids
     )
+    create_test_validation_and_train_files(train_validation_and_test_dates)
 
     return process_data_sets_for_model(data), data_type_log_ids, train_validation_and_test_dates
 

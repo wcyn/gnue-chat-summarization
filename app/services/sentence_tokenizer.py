@@ -1,14 +1,13 @@
 import linecache
 
 
-from app.services.data_preparation import DATA_FILES_DIR
+from app.services.data_preparation import DATA_FILES_DIR, CHAT_LOGS_FILENAME
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing import sequence
 from os.path import join
 
-CHAT_LOGS_FILENAME = join(DATA_FILES_DIR, "gnue_irc_chat_logs_preprocessed.txt")
 MAX_CHAT_LENGTH = 100
-TOP_WORDS = 100000
+TOP_WORDS = 10000
 
 
 def _get_summarized_chat_logs(chat_logs_filename, chat_log_ids):
