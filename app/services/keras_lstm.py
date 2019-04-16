@@ -9,7 +9,7 @@ import tensorflow as tf
 from app.services.paths import *
 from keras.models import Sequential, load_model
 from keras.layers import Dense, Activation, Embedding, Dropout, TimeDistributed
-from keras.layers import LSTM
+from keras.layers import LSTM, Bidirectional
 from keras.optimizers import Adam
 from keras.utils import to_categorical
 from keras.callbacks import ModelCheckpoint
@@ -193,15 +193,17 @@ def main(data_path):
 
     if args.run_opt == 1:
         model = Sequential()
+        # model.add(Bidirectional(LSTM(10, return_sequences=True),
+        #                         input_shape=(5, 10)))
         # model.add(Embedding(vocabulary, hidden_nodes_size, input_length=num_steps))
-        model.add(Dropout(0.5))
-        model.add(LSTM(hidden_nodes_size, return_sequences=True, input_shape=(time_steps, input_dimension)))
+        # model.add(Dropout(0.5))
+        model.add(Bidirectional(LSTM(hidden_nodes_size, return_sequences=True), input_shape=(time_steps, input_dimension)))
         if use_dropout:
             model.add(Dropout(0.5))
-        model.add(LSTM(hidden_nodes_size, return_sequences=True))
+        model.add(Bidirectional(LSTM(hidden_nodes_size, return_sequences=True)))
         if use_dropout:
             model.add(Dropout(0.5))
-        model.add(LSTM(hidden_nodes_size))
+        model.add(Bidirectional(LSTM(hidden_nodes_size)))
         if use_dropout:
             model.add(Dropout(0.5))
         # model.add(TimeDistributed(Dense(vocabulary)))
@@ -209,14 +211,17 @@ def main(data_path):
         # model.add(Activation('softmax'))
 
         # optimizer = Adam()
+
+        model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
+
         print(model.summary())
         checkpointer = ModelCheckpoint(
-            filepath=data_path + '/models/model-{epoch:02d}' + '-{}ts2.hdf5'.format(time_steps),
+            filepath=data_path + '/models/model-{epoch:02d}' + '-{}ts_bidi.hdf5'.format(time_steps),
             verbose=1,
             period=5
         )
-        num_epochs = 100
-        model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
+        num_epochs = 200
+
         model_history = model.fit(
             train_data, train_y,
             batch_size=batch_size, epochs=num_epochs,
@@ -231,8 +236,8 @@ def main(data_path):
         # model.fit_generator(train_data_generator.generate(), 2000, num_epochs,
         #                     validation_data=valid_data_generator.generate(),
         #                     validation_steps=10)
-        model.save(os.path.join(data_path, "/models/final_model_{}ts2.hdf5".format(time_steps)))
-        with open(os.path.join(data_path, "/models/model_history{}ts2.json".format(time_steps)), "w") as history_file:
+        model.save(os.path.join(data_path, "/models/final_model_{}ts_bidi.hdf5".format(time_steps)))
+        with open(os.path.join(data_path, "/models/model_history{}ts_bidi.json".format(time_steps)), "w") as history_file:
             model_history.validation_data = []
             model_history.model = str(model_history.model.__dict__)
             history_file.write(json.dumps(model_history.__dict__, indent=2))

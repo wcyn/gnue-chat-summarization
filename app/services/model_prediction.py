@@ -16,7 +16,8 @@ db, cursor = connection.db, connection.cursor
 
 merged_hybrid_filename = join(DATA_FILES_DIR, "models", "merged_hybrid_model.h5")
 merged_hybrid_2_filename = join(DATA_FILES_DIR, "models", "1157354df_500e_64bs_adam_342min_merged_hybrid_model.h5")
-time_stepped_lstm_filename = join(CHAT_DATA_TYPE_FILES, "models", "model-20-30ts.hdf5")
+# time_stepped_lstm_filename = join(CHAT_DATA_TYPE_FILES, "models", "model-20-30ts.hdf5")
+time_stepped_lstm_filename = join(CHAT_DATA_TYPE_FILES, "models", "model-45-30ts_bidi.hdf5")
 
 MODEL_CONFIGS = {
     "hybrid_lstm_feed_forward": {
