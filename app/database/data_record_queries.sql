@@ -72,3 +72,5 @@ UPDATE GNUeIRCLogs
 SET categorical_value_1 = 0, categorical_value_2 = 0
 WHERE categorical_value_1 IS NULL OR categorical_value_2 IS NULL
 ;
+
+SELECT * FROM conversation_statistics_2;

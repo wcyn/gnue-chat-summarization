@@ -136,11 +136,23 @@ CREATE INDEX date_of_log
   ON GNUeIRCLogs (date_of_log);
 
 CREATE TABLE conversation_statistics
-			(
-			number_of_summaries INT DEFAULT 0 NOT NULL,
-			number_of_true_predictions INT DEFAULT 0 NOT NULL,
-			in_last_predicted_group BOOLEAN DEFAULT FALSE ,
-			number_of_sentences INT DEFAULT 0 NOT NULL,
-			conversation_date VARCHAR(64) PRIMARY KEY
-			)
+(
+  number_of_summaries INT DEFAULT 0 NOT NULL,
+  number_of_true_predictions INT DEFAULT 0 NOT NULL,
+  in_last_predicted_group BOOLEAN DEFAULT FALSE ,
+  number_of_sentences INT DEFAULT 0 NOT NULL,
+  conversation_date VARCHAR(64) PRIMARY KEY,
+  data_type VARCHAR(32) DEFAULT 'train' NOT NULL
+)
 
+create table conversation_statistics_2
+(
+    number_of_summaries        int        default 0 not null,
+    number_of_true_predictions int        default 0 not null,
+    in_last_predicted_group    tinyint(1) default 0 null,
+    number_of_sentences        int        default 0 not null,
+    conversation_date          varchar(64)          not null,
+    data_type VARCHAR(32) DEFAULT 'train' NOT NULL,
+    constraint conversation_statistics_conversation_date_uindex
+        unique (conversation_date)
+);

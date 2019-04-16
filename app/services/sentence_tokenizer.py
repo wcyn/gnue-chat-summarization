@@ -1,10 +1,8 @@
 import linecache
 
-
-from app.services.data_preparation import DATA_FILES_DIR, CHAT_LOGS_FILENAME
+from app.services.paths import CHAT_LOGS_FILENAME
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing import sequence
-from os.path import join
 
 MAX_CHAT_LENGTH = 100
 TOP_WORDS = 10000
@@ -34,7 +32,7 @@ def _generate_chat_log_sequences(chat_logs):
     :return: A list of sequences representing the chat logs
     """
     tokenizer = Tokenizer(
-        num_words=None,
+        num_words=TOP_WORDS,
         filters="\n",
         lower=False,
         split=' '
@@ -43,8 +41,8 @@ def _generate_chat_log_sequences(chat_logs):
     return tokenizer.texts_to_sequences(chat_logs)
 
 
-def _pad_sequences(sequences):
-    return sequence.pad_sequences(sequences, maxlen=MAX_CHAT_LENGTH)
+def _pad_sequences(sequences, sequence_size):
+    return sequence.pad_sequences(sequences, maxlen=sequence_size)
 
 
 # sequences = _generate_chat_log_sequences(chat_logs)
@@ -53,10 +51,24 @@ def _pad_sequences(sequences):
 # print(_pad_sequences(sequences))
 
 
-def get_chat_log_sequences(log_ids):
+def get_chat_log_sequences_and_chat_logs(log_ids, sequence_size=MAX_CHAT_LENGTH):
+    """
+    Get chat log sequences and chat logs given log ids
+    :param sequence_size: MAXIMUM size of the sequence
+    :param log_ids: list of log ids
+    :return: dict containing chat data in the shape:
+        {
+        "sequences": [123, 21, 35, 4],
+        "chat_logs": ["hello", "hi mark"]
+    }
+    """
     chat_logs = get_chat_logs(log_ids)
     sequences = _generate_chat_log_sequences(chat_logs)
-    return _pad_sequences(sequences), chat_logs
+    chat_data = {
+        "sequences": _pad_sequences(sequences, sequence_size),
+        "chat_logs": chat_logs
+    }
+    return chat_data
 
 
 def get_chat_logs(log_ids):

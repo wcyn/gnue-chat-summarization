@@ -16,7 +16,8 @@ LOG_IDS_FILENAME = join(
 def get_logs_by_date(date_of_log):
     try:
         cursor.execute(
-            u"SELECT log_id, line_message, is_summary, prediction, send_user "
+            u"SELECT log_id, line_message, is_summary, prediction, "
+            u"categorical_value_1, categorical_value_2, send_user "
             u"FROM GNUeIRCLogs "
             u"WHERE date_of_log=%s ", (date_of_log,)
         )
@@ -26,11 +27,33 @@ def get_logs_by_date(date_of_log):
         db.rollback()
 
 
+def get_date_data_types():
+    try:
+        cursor.execute(
+            u"SELECT conversation_date, data_type "
+            u"FROM conversation_statistics_2 "
+            u"ORDER BY data_type DESC"
+        )
+        return cursor.fetchall()
+    except MySQLdb.Error as error:
+        print("ERROR: {}".format(error))
+        db.rollback()
+
+
+def format_date_data_types(date_data_types):
+    formatted_date_data_types = {}
+    for date_data_type in date_data_types:
+        dates = formatted_date_data_types.get(date_data_type["data_type"], [])
+        dates.append(date_data_type["conversation_date"])
+        formatted_date_data_types[date_data_type["data_type"]] = dates
+    return formatted_date_data_types
+
+
 def get_conversation_statistics_by_date(date_of_log):
     try:
         cursor.execute(
-            u"SELECT number_of_sentences, number_of_summaries, number_of_true_predictions "
-            u"FROM conversation_statistics "
+            u"SELECT number_of_sentences, number_of_summaries, number_of_true_predictions, data_type "
+            u"FROM conversation_statistics_2 "
             u"WHERE conversation_date=%s ", (date_of_log,)
         )
         return cursor.fetchone()
@@ -74,48 +97,6 @@ def get_log_by_id(log_id):
         return cursor.fetchone()
     except MySQLdb.Error as error:
         print("ERROR: {}".format(error))
-        db.rollback()
-    except Exception as error:
-        print(error)
-
-
-def update_conversation_statistics_by_date(date_of_logs):
-    logs = get_logs_by_date(date_of_logs)
-
-    number_of_summaries = number_of_true_predictions = number_of_sentences = 0
-    for log in logs:
-        number_of_true_predictions += log["prediction"]
-        number_of_summaries += log["is_summary"]
-        number_of_sentences += 1
-
-    values = {
-        "conversation_date": date_of_logs,
-        "number_of_true_predictions": number_of_true_predictions,
-        "number_of_summaries": number_of_summaries,
-        "number_of_sentences": number_of_sentences,
-    }
-
-    try:
-        cursor.execute(
-            u"INSERT INTO conversation_statistics ("
-            u"conversation_date, number_of_true_predictions, "
-            u"number_of_summaries, number_of_sentences) "
-            u"VALUES ('{conversation_date}', {number_of_true_predictions}, "
-            u"{number_of_summaries}, {number_of_sentences}) "
-            u"ON DUPLICATE KEY UPDATE "
-            u"conversation_date=VALUES(conversation_date), "
-            u"number_of_true_predictions=VALUES(number_of_true_predictions), "
-            u"number_of_summaries=VALUES(number_of_summaries), "
-            u"number_of_sentences=VALUES(number_of_sentences)".format(
-                **values
-            )
-        )
-        print("UPDATED CONVERSATION STATISTICS FOR DATE: ", date_of_logs)
-        db.commit()
-        return cursor.fetchone()
-    except MySQLdb.Error as error:
-        print("ERROR: {}".format(error))
-        print(cursor.description)
         db.rollback()
     except Exception as error:
         print(error)
@@ -215,19 +196,5 @@ def get_summary_and_quotes_by_date(date):
         db.rollback()
 
 
-def update_conversations_for_summaries():
-    summarized_chat_date_partitions_filename = join(
-        DATA_FILES_DIR, "summarized_chat_date_partitions_cumulative_count.csv"
-    )
-    summarized_chat_date_partitions = pd.read_csv(
-        summarized_chat_date_partitions_filename
-    )
-    chat_dates = summarized_chat_date_partitions.date_of_log.values
-
-    for chat_date in chat_dates:
-        update_conversation_statistics_by_date(chat_date)
-
-
 if __name__ == "__main__":
-    update_conversations_for_summaries()
-
+    format_date_data_types(get_date_data_types())

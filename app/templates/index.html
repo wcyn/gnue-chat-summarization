@@ -11,6 +11,23 @@
       </ul>
         <div>Start <a href="{{ url_for('logs_page', **{'logs_date': '2001-10-23'}) }}">here</a></div>
         <div>Coming back? Continue here:  <a href="{{ url_for('logs_page', **{'logs_date': '2001-11-19'}) }}">here</a></div>
-
+      <div id="train-data">
+        <h4>Train Data</h4>
+        {% for date in date_data_types["train"] %}
+          <div class="data-type-date">- <a href="{{ url_for('logs_page', **{'logs_date': date }) }}">{{date}}</a></div>
+        {% endfor %}
+      </div>
+      <div id="validation-data">
+        <h4>Validation Data</h4>
+        {% for date in date_data_types["validation"] %}
+          <div class="data-type-date">- <a href="{{ url_for('logs_page', **{'logs_date': date }) }}">{{date}}</a></div>
+        {% endfor %}
+      </div>
+      <div id="test-data">
+        <h4>Test Data</h4>
+        {% for date in date_data_types["test"] %}
+          <div class="data-type-date">- <a href="{{ url_for('logs_page', **{'logs_date': date }) }}">{{date}}</a></div>
+        {% endfor %}
+      </div>
     </div>
 {% endblock %}

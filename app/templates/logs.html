@@ -4,6 +4,7 @@
     <div class="chat-logs">
         <div class="navigation" id="main-nav-bar">
             <span class="date-header">{{ logs_date }}</span>
+            <span class="data_type"> <strong>[ {{ conversation_statistics['data_type'].title() }} Data ]</strong></span>
             <span class="chat-statistics"><strong>Total Chats:</strong> {{conversation_statistics['number_of_sentences']}} </span>
             <span class="chat-statistics"><strong>True Predictions:</strong> {{conversation_statistics['number_of_true_predictions']}} </span>
             <a class="previous-date" href="{{ url_for('logs_page', **{'logs_date': previous_date}) }}">Previous ({{previous_date}}) </a>
@@ -24,7 +25,9 @@
                         {% set username = log['send_user']%}
                         <tr>
                             <td class="nick" style="color: {{username_colors[username]}}">{{username}}:</td>
-                            <td class="text tooltip" colspan="2" log_id="{{log['log_id']}}">{{log['line_message']}}
+                            <td class="text tooltip" style="background-color: rgba(255, 152, 0, {{log['categorical_value_1']}});" colspan="2" log_id="{{log['log_id']}}">
+                                <span class="color-overlay" style="background-color:rgba(139, 195, 74, {{log['categorical_value_2']}});"></span>
+                                <span>{{log['line_message']}}</span>
                                 <span class="tooltip-text">{{log['log_id']}}</span>
                                 <span class="summary-checkbox">
                                     <input type="checkbox" name="chat_log" value="{{log['log_id']}}" {% if log['is_summary'] %} checked="checked" {% endif %}>

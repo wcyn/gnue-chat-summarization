@@ -1,32 +1,25 @@
 import json
 import linecache
+import os
+
 import pandas as pd
 import random
 
-from keras.utils import to_categorical
 from app.services.logs import get_log_messages_by_date
+from app.services.paths import *
+from app.services.sentence_tokenizer import get_chat_log_sequences_and_chat_logs
+from keras.utils import to_categorical
 from os.path import join, exists
 from sklearn.preprocessing import StandardScaler
 
-# DATA_FILES_DIR = join("..", "feature_extraction", "data_files")
-# DATA_FILES_V2_DIR = join("..", "feature_extraction", "data_files_v2")
-# FEATURES_DIR = join("..", "feature_extraction", "feature_outputs")
-
-DATA_FILES_DIR = join("feature_extraction", "data_files")
-DATA_FILES_V2_DIR = join("feature_extraction", "data_files_v2")
-FEATURES_DIR = join("feature_extraction", "feature_outputs")
-
-CHAT_LOGS_FILENAME = join(DATA_FILES_DIR, "gnue_irc_chat_logs_preprocessed.txt")
-CHAT_DATA_TYPE_FILES = join("app", "services", "chat_data_files")
-
 ALL_CHAT_FEATURES_FILENAME = join(FEATURES_DIR, "all_chat_features.csv")
+ALL_CHAT_SENTENCE_VECTORS_FILENAME = join(FEATURES_DIR, "sentence_vectors_30e.csv")
 CONVERSATION_LOG_IDS_FILENAME = join(DATA_FILES_V2_DIR, "conversation_log_ids.json")
 SUMMARIZED_CHAT_DATE_PARTITIONS_FILENAME = join(
     DATA_FILES_DIR, "summarized_chat_date_partitions_cumulative_count.csv"
 )
 SUMMARIZED_CHAT_FEATURES_FILENAME = join(FEATURES_DIR, "summarized_chats_features.csv")
 SUMMARIZED_CHAT_LOG_IDS_FILENAME = join(DATA_FILES_DIR, "summarized_chat_log_ids.csv")
-TIME_OFFSET = 1554206530
 
 COLUMNS_TO_DROP = ["log_id", "mean_tf_idf", "mean_tf_isf"]
 FEATURES_COLUMN_NAMES = [  # In the correct order
@@ -43,6 +36,8 @@ FEATURES_COLUMN_NAMES = [  # In the correct order
 ]
 FEATURES_DATA_KEYS = {"train_features_X", "validation_features_X", "test_features_X"}
 LABELS_DATA_KEYS = {"train_y", "validation_y", "test_y"}
+SEQUENCES_DATA_KEYS = {"train_sequences_X", "validation_sequences_X", "test_sequences_X"}
+CHAT_LOGS_DATA_KEYS = {"train_chat_logs", "validation_chat_logs", "test_chat_logs"}
 TOTAL_NUMBER_OF_CHATS = 20715
 
 
@@ -53,7 +48,12 @@ def get_train_validation_and_test_dates(conversation_dates, validation_ratio=0.2
     :param random_seed: A seed to use for the randomizer in order to get the same shuffle results every time
     :param validation_ratio: Ratio of number of conversations to total conversation to be used for the validation set
     :param test_ratio: Ratio of number of conversation to total conversation to be used for the test set
-    :return: A dictionary containing a random list of dates for the training, validation and test sets
+    :return: A dictionary containing a random list of dates for the training, validation and test sets. Has the shape:
+        {
+            "train": [date_4, date_1, date_6, ...],
+            "validation": [date_8, date_3, date_9, ...],
+            "test": [date_5, date_2, date_7, ...],
+        }
     """
     # Ensure there's some training set
     assert validation_ratio + test_ratio < 1
@@ -69,9 +69,10 @@ def get_train_validation_and_test_dates(conversation_dates, validation_ratio=0.2
     index_for_validation_test_split = test_split * -1
 
     train_dates = [conversation_dates[index] for index in shuffled_indexes[:index_for_train_validation_split]]
-    validation_dates = [conversation_dates[index] for index in shuffled_indexes[
-                                                               index_for_train_validation_split:index_for_validation_test_split
-                                                               ]]
+    validation_dates = [
+        conversation_dates[index] for index in shuffled_indexes[
+                                               index_for_train_validation_split:index_for_validation_test_split
+                                               ]]
     test_dates = [conversation_dates[index] for index in shuffled_indexes[index_for_validation_test_split:]]
 
     return {
@@ -96,12 +97,14 @@ def validate_column_names(column_names):
         raise ValueError("Column names do not match expected column names")
 
 
-def validate_total_number_of_records(records_data_frames_dict, with_labels=False):
+def validate_total_number_of_records(records_data_frames_dict, with_labels=False, with_sequences=False):
     total_records = 0
     for records in records_data_frames_dict.values():
-
         total_records += len(records)
-    if with_labels:
+
+    if with_labels and with_sequences:
+        total_records //= 4
+    elif with_labels or with_sequences:
         total_records //= 2
 
     if total_records != TOTAL_NUMBER_OF_CHATS:
@@ -151,10 +154,15 @@ def concatenate_data_type_log_ids(train_validation_and_test_dates, conversation_
 
 def get_train_validation_and_test_data(
         features_filename,
-        data_type_log_ids
+        data_type_log_ids,
+        include_word_sequences,
+        sequence_size=None
 ):
     """
     Get features data for train, validation and test sets
+    :param sequence_size: Max length of the sequence that the model requires.
+        Should fit the model's expected input shape
+    :param include_word_sequences: bool stating whether to include word sequences as part of the data
     :param data_type_log_ids: dict containing all log ids for each data type. Has the form:
         {
             "train": [log_id_1, log_id_2, ...],
@@ -170,9 +178,14 @@ def get_train_validation_and_test_data(
             "train_y": Pandas DataFrame,
             "validation_y": Pandas DataFrame,
             "test_y": Pandas DataFrame,
+            "train_sequences_X": (optional data)list of integers,
+            "validation_sequences_X": (optional data)list of integers,
+            "test_sequences_X": (optional data)list of integers,
+            "train_chat_logs": (optional data)list of strings representing chat logs,
+            "validation_chat_logs": (optional data)list of strings representing chat logs,
+            "test_chat_logs": (optional data)list of strings representing chat logs,
         }
     """
-    #
     data_records = {
         key: [] for key in FEATURES_DATA_KEYS ^ LABELS_DATA_KEYS
     }
@@ -181,7 +194,18 @@ def get_train_validation_and_test_data(
     validate_column_names(column_names)
 
     for data_type, log_ids in data_type_log_ids.items():
-        x_data_key, y_data_key = data_type + "_features_X", data_type + "_y"
+        x_data_key, y_data_key, x_sequences, chat_logs_key = (
+            data_type + "_features_X",
+            data_type + "_y",
+            data_type + "_sequences_X",
+            data_type + "_chat_logs"
+        )
+        if include_word_sequences:
+            chat_log_sequences_and_chat_logs = get_chat_log_sequences_and_chat_logs(
+                data_type_log_ids[data_type], sequence_size=sequence_size)
+            data_records[x_sequences] = chat_log_sequences_and_chat_logs["sequences"]
+            data_records[chat_logs_key] = chat_log_sequences_and_chat_logs["chat_logs"]
+
         for log_id in log_ids:
             feature_data = linecache.getline(features_filename, log_id + 1).strip().split(",")
             feature_data = [float(value) for value in feature_data]
@@ -197,10 +221,14 @@ def get_train_validation_and_test_data(
             column_names = x_column_names
         elif data_type in LABELS_DATA_KEYS:
             column_names = y_column_name
+        elif data_type in SEQUENCES_DATA_KEYS ^ CHAT_LOGS_DATA_KEYS:
+            pass
         else:
             raise ValueError("Invalid Data Key: ", data_type)
-        data_records[data_type] = convert_list_to_data_frame(data_record_group, column_names)
-    validate_total_number_of_records(data_records, with_labels=True)
+
+        if data_type not in SEQUENCES_DATA_KEYS ^ CHAT_LOGS_DATA_KEYS:
+            data_records[data_type] = convert_list_to_data_frame(data_record_group, column_names)
+    validate_total_number_of_records(data_records, with_labels=True, with_sequences=include_word_sequences)
 
     return data_records
 
@@ -216,12 +244,6 @@ def get_conversation_log_ids():
     """
     with open(CONVERSATION_LOG_IDS_FILENAME) as f:
         return json.load(f)
-
-
-# conversation_log_ids = get_conversation_log_ids()
-# train_validation_and_test_dates = get_train_validation_and_test_dates(list(conversation_log_ids.keys()))
-# import pprint
-# pprint.pprint(concatenate_data_type_log_ids(train_validation_and_test_dates, conversation_log_ids))
 
 
 def normalize_data_set(
@@ -258,7 +280,7 @@ def standardize_data_set(data_set_df):
     return pd.DataFrame(scaled_array,  columns=data_set_df.columns.values)
 
 
-def process_features_data(features_data_frame, columns_to_drop, method="standardize"):
+def process_features_data(features_data_frame, columns_to_drop, method="normalize"):
     """
     Process features X data. Drop columns and then standardize or normalize the data
     :param features_data_frame: The data to be processed
@@ -290,7 +312,7 @@ def process_labels_data(labels_data_frame):
 
 def process_data_sets_for_model(
         train_validation_and_test_data,
-        columns_to_drop=COLUMNS_TO_DROP
+        columns_to_drop=(),
 ):
     """
     Drop unnecessary columns and normalize data in preparation for the model
@@ -303,8 +325,14 @@ def process_data_sets_for_model(
             "train_y": array one-hot vector,
             "validation_y": array one-hot vector,
             "test_y": array one-hot vector,
+            "train_sequences_X": (optional data)list of integers,
+            "validation_sequences_X": (optional data)list of integers,
+            "test_sequences_X": (optional data)list of integers,
+            "train_chat_logs": (optional data)list of strings representing chat logs,
+            "validation_chat_logs": (optional data)list of strings representing chat logs,
+            "test_chat_logs": (optional data)list of strings representing chat logs,
         }
-    :return: A dict of Pandas DataFrames with processed data
+    :return: A dict of Pandas DataFrames with processed data, containing the same fields as above
     """
     for data_key, data_records in train_validation_and_test_data.items():
         if data_key in FEATURES_DATA_KEYS:
@@ -316,45 +344,94 @@ def process_data_sets_for_model(
             train_validation_and_test_data[data_key] = process_labels_data(
                 train_validation_and_test_data[data_key]
             )
+        elif data_key in SEQUENCES_DATA_KEYS ^ CHAT_LOGS_DATA_KEYS:
+            pass
         else:
             raise ValueError("Invalid Data Key: ", data_key)
 
-    validate_total_number_of_records(train_validation_and_test_data, with_labels=True)
+    with_sequences = False
+    if train_validation_and_test_data.get("train_sequences_X") is not None:
+        with_sequences = True
+
+    validate_total_number_of_records(train_validation_and_test_data, with_labels=True, with_sequences=with_sequences)
 
     return train_validation_and_test_data
 
 
 def create_test_validation_and_train_files(train_validation_and_test_dates):
+    """
+
+    :type train_validation_and_test_dates: dict containing a random list of dates for the
+    training, validation and test sets. Has the shape:
+        {
+            "train": [date_4, date_1, date_6, ...],
+            "validation": [date_8, date_3, date_9, ...],
+            "test": [date_5, date_2, date_7, ...],
+        }
+    """
+    for data_type in train_validation_and_test_dates.keys():
+        filename = join(CHAT_DATA_TYPE_FILES, data_type) + ".txt"
+        # Empty pre-existing files so we don't append to previous data
+        with open(filename, "w"):
+            pass
+
     for data_type, dates in train_validation_and_test_dates.items():
         filename = join(CHAT_DATA_TYPE_FILES, data_type) + ".txt"
-        if exists(filename):
-            append_write = "a"  # append if already exists
-        else:
-            append_write = "w"
-
-        print(append_write)
-        with open(filename, append_write) as chat_data_file:
+        with open(filename, "a") as chat_data_file:
             for date in dates:
                 messages = get_log_messages_by_date(date)
                 for message in messages:
                     chat_data_file.write(message["line_message"] + "\n")
 
 
-def get_processed_data_sets_for_model():
+def create_test_validation_and_train_sentence_vector_files(data_type_log_ids, vectors_filename):
+    """
+
+    :param vectors_filename: Filename of the file containing all sentence vectors
+    :type data_type_log_ids: dict containing a list of log ids
+    training, validation and test sets. Has the shape:
+        {
+            "train": [log_id_1, log_id_2, ...],
+            "validation": [log_id_56, log_id_57, ...]
+            "test": [log_id_71, log_id_72, ...]
+        }
+    """
+
+    for data_type, log_ids in data_type_log_ids.items():
+        filename = join(CHAT_DATA_TYPE_FILES, data_type) + "-sentence-vectors.txt"
+        with open(filename, "w"):
+            pass
+
+        with open(filename, "a") as vectors_data_file:
+            for log_id in log_ids:
+                # vector_data = linecache.getline(vectors_filename, log_id + 1).strip().split(",")
+                vector_data = linecache.getline(vectors_filename, log_id + 1)
+                vectors_data_file.write(vector_data)
+
+
+def get_processed_data_sets_for_model(include_word_sequences, sequence_size=None):
     conversation_log_ids = get_conversation_log_ids()
     train_validation_and_test_dates = get_train_validation_and_test_dates(list(conversation_log_ids.keys()))
     data_type_log_ids = concatenate_data_type_log_ids(train_validation_and_test_dates, conversation_log_ids)
+    # create_test_validation_and_train_sentence_vector_files(data_type_log_ids, ALL_CHAT_SENTENCE_VECTORS_FILENAME)
     data = get_train_validation_and_test_data(
         ALL_CHAT_FEATURES_FILENAME,
-        data_type_log_ids
+        data_type_log_ids,
+        include_word_sequences=include_word_sequences,
+        sequence_size=sequence_size
     )
     create_test_validation_and_train_files(train_validation_and_test_dates)
 
-    return process_data_sets_for_model(data), data_type_log_ids, train_validation_and_test_dates
+    return (
+        process_data_sets_for_model(data, columns_to_drop=COLUMNS_TO_DROP),
+        data_type_log_ids,
+        train_validation_and_test_dates
+    )
 
 
 if __name__ == "__main__":
-    print(get_processed_data_sets_for_model()[0]["test_features_X"].tail())
+    # print(get_processed_data_sets_for_model(include_word_sequences=True)[0]["test_features_X"].tail())
+    get_processed_data_sets_for_model(include_word_sequences=True)
 
 
 """

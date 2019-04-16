@@ -6,8 +6,8 @@
 
 div.menu {
     padding: 10px;
-    /*background: #e74c3c;*/
-    background: #f08080;
+    background: #e74c3c;
+    /*background: #f08080;*/
     color: #eee;
 }
 
@@ -22,6 +22,14 @@ div.menu a:hover {
     text-decoration: underline;
 }
 
+#train-data, #validation-data, #test-data {
+    width: 33%;
+    float: left;
+}
+
+.data-type-date {
+    padding: 5px;
+}
 
 /* Alternative 1: text */
 
@@ -54,10 +62,10 @@ td.nick {
 
 td.text {
     width: 100%;
-    padding: 5px 0;
+    padding: 5px 0 5px 5px;
     margin-left: 5px;
-    color: #505050;
-    border-bottom: 1px dashed #ddd;
+    /*color: #505050;*/
+    /*border-bottom: 1px dashed #ddd;*/
     word-wrap: break-word;
 }
 
@@ -75,7 +83,7 @@ td span.prediction-indicator {
 }
 
 td span.prediction-indicator.true-prediction {
-    background: #f08080;
+    background: #8bc34a;
 }
 
 td span.prediction-indicator.false-prediction {
@@ -258,8 +266,18 @@ input.summary-submit {
     text-align: center;
 }
 .tooltip {
-  position: relative;
-  display: inline-block;
+    position: relative;
+    display: inline-block;
+}
+
+td.text.tooltip > .color-overlay {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
 }
 
 /* Tooltip text */

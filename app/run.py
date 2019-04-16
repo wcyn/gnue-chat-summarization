@@ -8,9 +8,12 @@ from .services.logs import (
     get_summary_and_quotes_by_date,
     get_username_colors,
     generate_random_color,
+    format_date_data_types,
     update_log_by_id,
     update_log_message_summaries,
-    get_conversation_statistics_by_date)
+    get_conversation_statistics_by_date,
+    get_date_data_types
+)
 
 app = Flask(__name__, template_folder='templates')
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
@@ -18,9 +21,11 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 @app.route("/")
 def home_page():
+    date_data_types = get_date_data_types()
     return render_template(
         'index.html',
         app_name="GNUe IRC Chat Logs Preprocessor",
+        date_data_types=format_date_data_types(date_data_types),
         endpoints=[("/logs/date/<date>", ["GET"]), ("/logs/<log_id>", ["GET", "PUT"])])
 
 
