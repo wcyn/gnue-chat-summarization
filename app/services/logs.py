@@ -102,6 +102,26 @@ def get_log_by_id(log_id):
         print(error)
 
 
+def get_prediction_clusters(logs):
+    if len(logs) < 1:
+        return []
+
+    prediction_clusters = []
+    last_true_prediction_id = logs[0]["log_id"]
+    for log in logs:
+        if log["prediction"]:
+            log_data = {
+                        "message": log["line_message"],
+                        "log_id": log["log_id"]
+                    }
+            if log["log_id"] - last_true_prediction_id < 3:
+                prediction_clusters[-1].append(log_data)
+            else:
+                prediction_clusters.append([log_data])
+            last_true_prediction_id = log["log_id"]
+    return prediction_clusters
+
+
 def update_log_by_id(log_id, is_summary):
     try:
         cursor.execute(

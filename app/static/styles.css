@@ -221,7 +221,11 @@ input.summary-submit {
 
 .quote-block {
     color: #f08080;
-    margin: 10px;
+    margin: 5px;
+}
+
+.prediction-quote-block {
+    /*color: #222;*/
 }
 
 .sticky {
@@ -258,6 +262,16 @@ input.summary-submit {
     background: #f1f1f1;
     padding: 20px;
     margin: 10px;
+}
+
+.summary-block a {
+    text-decoration: none;
+    color: #000;
+}
+
+.summary-block a:hover {
+    color: #888;
+    transition: .2s;
 }
 
 .no-summary {

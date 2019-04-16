@@ -12,7 +12,8 @@ from .services.logs import (
     update_log_by_id,
     update_log_message_summaries,
     get_conversation_statistics_by_date,
-    get_date_data_types
+    get_date_data_types,
+    get_prediction_clusters
 )
 
 app = Flask(__name__, template_folder='templates')
@@ -47,6 +48,7 @@ def logs_page(logs_date):
             'logs.html',
             logs_date=logs_date,
             logs=logs,
+            prediction_clusters=get_prediction_clusters(logs),
             conversation_statistics=conversation_statistics,
             username_colors=username_colors,
             summary_and_quotes=summary_and_quotes,

@@ -27,7 +27,7 @@
                             <td class="nick" style="color: {{username_colors[username]}}">{{username}}:</td>
                             <td class="text tooltip" style="background-color: rgba(255, 152, 0, {{log['categorical_value_1']}});" colspan="2" log_id="{{log['log_id']}}">
                                 <span class="color-overlay" style="background-color:rgba(139, 195, 74, {{log['categorical_value_2']}});"></span>
-                                <span>{{log['line_message']}}</span>
+                                <span id="{{log['log_id']}}">{{log['line_message']}}</span>
                                 <span class="tooltip-text">{{log['log_id']}}</span>
                                 <span class="summary-checkbox">
                                     <input type="checkbox" name="chat_log" value="{{log['log_id']}}" {% if log['is_summary'] %} checked="checked" {% endif %}>
@@ -42,7 +42,7 @@
 
             <div class="summary">
                 {% set s_sum = logs[0]['summary_sum'] if logs else None %}
-                <h4>Quotes and Summaries ({{conversation_statistics['number_of_summaries']}} Quoted) | {{logs_date}}</h4>
+                <h4>Actual Quotes and Summaries ({{conversation_statistics['number_of_summaries']}} Quoted) | {{logs_date}}</h4>
                 {% for summary_quote in summary_and_quotes %}
                     <div class="summary-block">
                         {{summary_quote['para']}}
@@ -68,6 +68,31 @@
                         </div>
                     </div>
                 {% endfor %}
+                {% if not summary_and_quotes %}
+                    <div class="summary-block">
+                        No Summary exists for logs on this date
+                    </div>
+                {% endif %}
+
+                <h4>Predicted Summaries ({{conversation_statistics['number_of_true_predictions']}} Predicted) | {{logs_date}}</h4>
+                    {% for cluster in prediction_clusters %}
+                        <div class="summary-block">
+                                <a href="#{{cluster[0]['log_id']}}">
+                                    <div class="quotes">
+                                        {% for log_data in cluster %}
+                                            <div class="prediction-quote-block">
+                                                {{log_data['message']}}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </a>
+                        </div>
+                    {% endfor %}
+                    {% if conversation_statistics['number_of_true_predictions'] < 1 %}
+                        <div class="summary-block">
+                            No true predictions have been made for these chats
+                        </div>
+                    {% endif %}
                 {% if not summary_and_quotes %}
                     <div class="summary-block">
                         No Summary exists for logs on this date
