@@ -122,7 +122,11 @@ train_y, validation_y, test_y = (
     labels_and_features_data["validation_y"],
     labels_and_features_data["test_y"]
 )
-
+train_features_X, validation_features_X, test_features_X = (
+    labels_and_features_data["train_features_X"],
+    labels_and_features_data["validation_features_X"],
+    labels_and_features_data["test_features_X"]
+)
 
 class KerasBatchGenerator(object):
 
@@ -157,7 +161,7 @@ class KerasBatchGenerator(object):
 
 num_steps = 30
 batch_size = 16
-num_epochs = 200
+num_epochs = 100
 train_data_generator = KerasBatchGenerator(train_sequences, num_steps, batch_size, vocabulary,
                                            skip_step=num_steps)
 valid_data_generator = KerasBatchGenerator(validation_sequences, num_steps, batch_size, vocabulary,
@@ -165,8 +169,9 @@ valid_data_generator = KerasBatchGenerator(validation_sequences, num_steps, batc
 
 hidden_nodes_size = 16
 use_dropout = True
-time_steps = 30
-input_dimension = 150
+time_steps = 50
+# input_dimension = 150
+input_dimension = train_features_X.shape[1]
 bidirectional = True
 
 print("Train: ", train_sequences.shape)
@@ -185,6 +190,12 @@ print("test: ", test_sequences.shape)
 # train_data = train_data.reshape((train_data.shape[0], time_steps, train_data.shape[1]))
 # valid_data = valid_data.reshape((valid_data.shape[0], 1, valid_data.shape[1]))
 # test_data = test_data.reshape((test_data.shape[0], 1, test_data.shape[1]))
+
+train_features_X, validation_features_X, test_features_X = (
+    create_time_steps(train_features_X.values, time_steps),
+    create_time_steps(validation_features_X.values, time_steps),
+    create_time_steps(test_features_X.values, time_steps)
+)
 
 
 def main(data_path):
@@ -290,17 +301,17 @@ def main(data_path):
         # print(true_print_out)
         # print(pred_print_out)
     elif args.run_opt == 1:
-        sentence_vector_input = Input(
-            shape=(time_steps, input_dimension), dtype='float32', name='sentence_vector_input'
+        sentence_features_input = Input(
+            shape=(time_steps, input_dimension), dtype='float32', name='sentence_features_input'
         )
         if bidirectional:
             lstm_out = Bidirectional(
                     LSTM(hidden_nodes_size, return_sequences=True)
-                )(sentence_vector_input)
+                )(sentence_features_input)
         else:
-            lstm_out = LSTM(hidden_nodes_size, return_sequences=True, name="lstm_out_1")(sentence_vector_input)
+            lstm_out = LSTM(hidden_nodes_size, return_sequences=True, name="lstm_out_1")(sentence_features_input)
 
-        dropout_1 = Dropout(0.5, name="dropout_1")(lstm_out)
+        dropout_1 = Dropout(0.2, name="dropout_1")(lstm_out)
 
         if bidirectional:
             lstm_out_2 = Bidirectional(
@@ -308,7 +319,7 @@ def main(data_path):
             )(dropout_1)
         else:
             lstm_out_2 = LSTM(hidden_nodes_size, return_sequences=True, name="lstm_out_2")(dropout_1)
-        dropout_2 = Dropout(0.5, name="dropout_2")(lstm_out_2)
+        dropout_2 = Dropout(0.2, name="dropout_2")(lstm_out_2)
 
         if bidirectional:
             lstm_out_3 = Bidirectional(
@@ -316,39 +327,26 @@ def main(data_path):
             )(dropout_2)
         else:
             lstm_out_3 = LSTM(hidden_nodes_size, name="lstm_out_3")(dropout_2)
-        dropout_3 = Dropout(0.5, name="dropout_3")(lstm_out_3)
+        dropout_3 = Dropout(0.2, name="dropout_3")(lstm_out_3)
 
-        sentence_vector_output = Dense(2, activation='softmax', name="sentence_vector_output")(dropout_3)
-
-        # Feed in feature data by concatenating it with LSTM output
-        num_of_feature_columns = labels_and_features_data["test_features_X"].shape[1]
-        sentence_features_input = Input(shape=(num_of_feature_columns,), name='sentence_features_input')
-        merged_input_and_output = keras.layers.concatenate([dropout_3, sentence_features_input])
-
-        # We stack a deep densely-connected network on top
-        x = Dense(16, activation='relu', name="dense_a")(merged_input_and_output)
-        x = Dense(16, activation='relu', name="dense_b")(x)
-        x = Dense(16, activation='relu', name="dense_c")(x)
-
-        # And finally we add the main logistic regression layer
-        main_output = Dense(2, activation="softmax", name='main_output')(x)
+        sentence_features_output = Dense(2, activation='softmax', name="sentence_features_output")(dropout_3)
 
         # Define a model with two inputs and two outputs
         merged_model = Model(
-            inputs=[sentence_vector_input, sentence_features_input],
-            outputs=[sentence_vector_output, main_output]
-            # inputs=[sentence_vector_input],
-            # outputs=[sentence_vector_output]
+            inputs=[sentence_features_input],
+            outputs=[sentence_features_output]
+            # inputs=[sentence_features_input],
+            # outputs=[sentence_features_output]
         )
 
-        model_folder_name = join(data_path, "models", "{}_ts_bidi_lstm_hybrid".format(time_steps))
+        model_folder_name = join(data_path, "models", "{}_ts_bidi_lstm_features".format(time_steps))
         if not os.path.exists(model_folder_name):
             os.mkdir(model_folder_name)
 
         checkpointer = ModelCheckpoint(
             filepath=join(model_folder_name, 'model-{epoch:02d}.hdf5'),
             verbose=1,
-            period=1
+            period=5
         )
 
         merged_model.compile(
@@ -359,27 +357,20 @@ def main(data_path):
             # loss_weights=[.9, 0.7],
             # sample_weight_mode="temporal"
         )
+
         print(merged_model.summary())
+        model_summary_filename = join(model_folder_name, "model_summary.txt")
+        with open(model_summary_filename, "w") as model_summary_file:
+            print("\nSaving model summary to ", model_summary_filename, "\n")
+            merged_model.summary(print_fn=lambda x: model_summary_file.write(x + "\n"))
 
         merged_model_history = merged_model.fit(
-            [
-                train_sequences,
-                labels_and_features_data["train_features_X"]
-            ],
-            [
-                train_y,
-                train_y
-            ],
+            [train_features_X],
+            [train_y],
             # validation_split=0.2,
             validation_data=[
-                [
-                    validation_sequences,
-                    labels_and_features_data["validation_features_X"]
-                ],
-                [
-                    validation_y,
-                    validation_y
-                ]
+                [validation_features_X],
+                [validation_y]
             ],
             epochs=num_epochs,
             batch_size=batch_size,

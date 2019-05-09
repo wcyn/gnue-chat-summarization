@@ -16,8 +16,8 @@ db, cursor = connection.db, connection.cursor
 
 merged_hybrid_filename = join(DATA_FILES_DIR, "models", "merged_hybrid_model.h5")
 merged_hybrid_2_filename = join(DATA_FILES_DIR, "models", "1157354df_500e_64bs_adam_342min_merged_hybrid_model.h5")
-# time_stepped_lstm_filename = join(CHAT_DATA_TYPE_FILES, "models", "model-20-30ts.hdf5")
-time_stepped_lstm_filename = join(CHAT_DATA_TYPE_FILES, "models", "model-45-30ts_bidi.hdf5")
+time_stepped_lstm_filename = join(CHAT_DATA_TYPE_FILES, "models", "model-20-30ts.hdf5")
+# time_stepped_lstm_filename = join(CHAT_DATA_TYPE_FILES, "models", "model-45-30ts_bidi.hdf5")
 
 MODEL_CONFIGS = {
     "hybrid_lstm_feed_forward": {
@@ -98,18 +98,24 @@ def get_processed_data_set(processed_data, type_of_data):
     return data_set
 
 
+def get_model_from_model_configs(model_name):
+    """
+    :param model_name: Name of the model. Should be part one of the keys in MODEL_CONFIGS
+    :return: A neural network model
+    """
+    return get_neural_network_model(MODEL_CONFIGS[model_name]["filename"])
+
+
 def generate_predictions(
         input_features,
-        model_name
+        model
 ):
     """
     Generate predictions
     :param input_features: Numpy array containing the features data records
-    :param model_name:
+    :param model: The model to use for prediction
     :return:
     """
-
-    model = get_neural_network_model(MODEL_CONFIGS[model_name]["filename"])
     predictions = model.predict(input_features)
 
     return predictions
@@ -249,14 +255,14 @@ if __name__ == "__main__":
             processed_data_set = get_processed_data_set(processed_data, data_type)
             preds = generate_predictions(
                 processed_data_set["input_features"],
-                model_name=MODEL_NAME
+                model=get_model_from_model_configs(MODEL_NAME)
             )
         else:
             sentence_vectors = keras_lstm.get_sentence_vectors(data_type)
             sentence_vectors = keras_lstm.create_time_steps(np.array(sentence_vectors), keras_lstm.time_steps)
             preds = generate_predictions(
                 sentence_vectors,
-                model_name=MODEL_NAME
+                model=get_model_from_model_configs(MODEL_NAME)
             )
 
         if not INCLUDE_WORD_SEQUENCES:

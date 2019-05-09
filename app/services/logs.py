@@ -114,7 +114,7 @@ def get_prediction_clusters(logs):
                         "message": log["line_message"],
                         "log_id": log["log_id"]
                     }
-            if log["log_id"] - last_true_prediction_id < 3:
+            if prediction_clusters and log["log_id"] - last_true_prediction_id < 3:
                 prediction_clusters[-1].append(log_data)
             else:
                 prediction_clusters.append([log_data])

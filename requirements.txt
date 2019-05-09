@@ -32,12 +32,15 @@ idna==2.8
 ipykernel==5.1.0
 ipython==7.2.0
 ipython-genutils==0.2.0
+ipywidgets==7.4.2
 itsdangerous==1.1.0
 jedi==0.13.2
 Jinja2==2.10
 jmespath==0.9.3
 jsonschema==2.6.0
+jupyter==1.0.0
 jupyter-client==5.2.4
+jupyter-console==6.0.0
 jupyter-core==4.4.0
 Keras==2.2.4
 Keras-Applications==1.0.7
@@ -81,6 +84,7 @@ python-dateutil==2.8.0
 pytz==2018.9
 PyYAML==3.13
 pyzmq==17.1.2
+qtconsole==4.4.3
 regex==2019.2.7
 requests==2.21.0
 s3transfer==0.2.0
@@ -106,3 +110,4 @@ vaderSentiment==3.2.1
 wcwidth==0.1.7
 webencodings==0.5.1
 Werkzeug==0.14.1
+widgetsnbextension==3.4.2

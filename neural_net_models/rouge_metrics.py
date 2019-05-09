@@ -47,7 +47,7 @@ def get_rouge_results(hypotheses, references, aggregator="Avg"):
                     )
         else:
             rouge_results.append((prepare_results(metric, results['p'], results['r'], results['f'])))
-    return rouge_results
+    return rouge_results, scores
 
 
 # hypotheses_1 = ["Hello How are you"]
